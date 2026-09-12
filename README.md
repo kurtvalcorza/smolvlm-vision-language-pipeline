@@ -47,6 +47,16 @@ python -c "from PIL import Image, ImageDraw; from smolvlm_vision_language_pipeli
 
 Measured on CPU (float32, Windows venv, 2026-09-12): load 5.71 s, 128 tokens in 17.40 s; the answer named a red square on a white background.
 
+## Tutorial
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/tutorials/smolvlm_vision_language_colab.ipynb)
+
+`tutorials/smolvlm_vision_language_colab.ipynb` is declared `TASK-INFERENCE` (see `tutorials/README.md`). Its default path draws a synthetic image (red square, blue circle), surfaces `MAX_IMAGES`/`MAX_IMAGE_SIDE`/`MAX_TEXT_CHARS`/`MAX_NEW_TOKENS` and the greedy decoding contract, stages the missing weight file with `stage_missing_files(..., allow_download=True)` and digest-verifies it with `verify_snapshot`, runs a captioning prompt and a counting question through the public API with an explicit token budget, and exports the answers with their `truncated` flags plus provenance JSON. No metric is reported: free-text answers have no intrinsic correctness signal and the repository ships no metric helper; the hallucination risk recorded on the model card is restated. BYOD is optional and gated off by default.
+
+## Release status
+
+**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. Complete `docs/release-verification.md` against the exact release revision before calling the notebook release-grade.
+
 ## Documents
 
 - [`MODEL_CARD.md`](MODEL_CARD.md) — MODEL_CARD_SPEC 1.1 card
