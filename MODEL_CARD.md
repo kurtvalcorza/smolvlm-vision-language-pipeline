@@ -20,7 +20,11 @@ base_model: HuggingFaceTB/SmolVLM-500M-Instruct
 
 ## Interactive Colab Tutorials
 
-This release ships no tutorial notebook (`tutorials/` is absent). The package is exercised through its test suite (`tests/`) and the run instructions in the README; a `NOTEBOOK_SPEC` 1.0 `TASK-INFERENCE` notebook is a follow-up, not a claim this card makes.
+This pipeline provides a ready-to-run interactive Google Colab notebook that exercises the repository's public API end to end — bootstrap a fresh runtime, stage and verify the pinned upstream revision, validate an input, run the task, and inspect and export the outputs:
+
+- **Task Inference Tutorial**:  
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/tutorials/smolvlm_vision_language_colab.ipynb) [`smolvlm_vision_language_colab.ipynb`](https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/tutorials/smolvlm_vision_language_colab.ipynb)  
+  *Image captioning and visual question answering with the pinned `HuggingFaceTB/SmolVLM-500M-Instruct` weights on one synthetic drawing with two prompts: greedy deterministic decoding with an explicit token budget and `truncated` flag; free-text output with no score and no metric; hallucination risk stated.*
 
 ---
 
