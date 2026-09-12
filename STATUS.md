@@ -1,0 +1,3 @@
+# Release status
+
+Current status: **Candidate / source-complete**. The pipeline package, offline unit tests (15), one CPU smoke run (float32, Windows venv, 2026-09-12) and `MODEL_CARD.md` (MODEL_CARD_SPEC 1.1) exist and pass the static gate. This is the card pass only: no tutorial notebook exists yet, and the repository is not release-grade until a `NOTEBOOK_SPEC` 1.0 tutorial and its clean-runtime execution evidence are recorded.

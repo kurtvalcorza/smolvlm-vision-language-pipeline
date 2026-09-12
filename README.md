@@ -1,14 +1,58 @@
-# smolvlm-vision-language-pipeline
+# SmolVLM Vision-Language Pipeline
 
-DIMER pipeline scaffold for **HuggingFaceTB/SmolVLM-500M-Instruct** — Visual Question Answering.
+DIMER inference wrapper for **`HuggingFaceTB/SmolVLM-500M-Instruct`** — image + text chat generation (captioning, visual question answering, document reading) — pinned to an immutable Hugging Face revision and loaded only from a digest-verified local snapshot.
 
-| | |
-|---|---|
-| Upstream model | [`HuggingFaceTB/SmolVLM-500M-Instruct`](https://huggingface.co/HuggingFaceTB/SmolVLM-500M-Instruct) |
-| Pinned revision | `a7da5b986cb59b408707209984f360a5f4ad7e47` (resolved 2026-09-12) |
-| Upstream license | `apache-2.0` (verified on the Hub 2026-09-12; re-check at the pinned revision before release) |
-| Weight files to stage | `model.safetensors (exclude onnx/)` |
-| Status | scaffold only — no weights downloaded, no pipeline code yet |
+## Upstream alignment
 
-Weights are staged under `weights/` and are git-ignored. This repository follows the
-MODEL_CARD_SPEC 1.0 / NOTEBOOK_SPEC 1.0 conventions used by the other `*-pipeline` repos.
+- Model: `HuggingFaceTB/SmolVLM-500M-Instruct`
+- Revision: `a7da5b986cb59b408707209984f360a5f4ad7e47`
+- Upstream weight license: Apache-2.0
+- Upstream task: image-text-to-text (Idefics3 architecture; SmolLM2-360M-Instruct decoder, SigLIP-derived encoder), English
+- Repository adaptation: **none**; inference only, one image + one user turn, greedy decoding by default
+
+## Quick start
+
+```python
+from PIL import Image
+from smolvlm_vision_language_pipeline import SmolVLMPipeline
+
+pipe = SmolVLMPipeline.from_pretrained(device="cpu")     # cuda:0/bfloat16 if available and device=None, else cpu/float32
+result = pipe.generate(Image.open("photo.jpg"), "Describe the image.", max_new_tokens=128)
+print(result["text"], result["truncated"], result["generation"])
+```
+
+`text` is free-form generated prose with no confidence attached; `generation` echoes `max_new_tokens`, `do_sample` and the decoding mode (`greedy` unless `do_sample=True`).
+
+## Weights layout
+
+```
+weights/smolvlm-500m-instruct/
+  dimer-base-manifest.json   # modelId, revision, per-file bytes + sha256 (verified on every load)
+  config.json                # Idefics3ForConditionalGeneration, text/vision sub-configs
+  preprocessor_config.json   # longest_edge 2048, 512-px tiles, mean/std 0.5
+  processor_config.json, chat_template.json, tokenizer.json, tokenizer_config.json, vocab.json, merges.txt,
+  added_tokens.json, special_tokens_map.json, generation_config.json, README.md
+  model.safetensors          # 1015025832 bytes, git-ignored
+```
+
+`from_pretrained()` calls `stage_missing_files()` then `verify_snapshot()` and refuses to load if any file is missing or its SHA-256 differs from the manifest; the snapshot is then loaded with `local_files_only=True` and `trust_remote_code=False`. Without a snapshot, `allow_download=True` loads from the Hub at `revision=a7da5b986cb59b408707209984f360a5f4ad7e47`; the default is to refuse. To stage the snapshot: `hf download HuggingFaceTB/SmolVLM-500M-Instruct --revision a7da5b986cb59b408707209984f360a5f4ad7e47 --local-dir weights/smolvlm-500m-instruct`, then write the manifest.
+
+## Tests and smoke
+
+```
+pip install -e . --no-deps
+pytest -q -o addopts= tests      # offline, no weights needed; 15 tests
+python -c "from PIL import Image, ImageDraw; from smolvlm_vision_language_pipeline import SmolVLMPipeline; im = Image.new('RGB', (256, 256), 'white'); ImageDraw.Draw(im).rectangle([64, 64, 192, 192], fill='red'); print(SmolVLMPipeline.from_pretrained(device='cpu').generate(im, 'Describe the image.')['text'])"
+```
+
+Measured on CPU (float32, Windows venv, 2026-09-12): load 5.71 s, 128 tokens in 17.40 s; the answer named a red square on a white background.
+
+## Documents
+
+- [`MODEL_CARD.md`](MODEL_CARD.md) — MODEL_CARD_SPEC 1.1 card
+- [`docs/WEIGHTS.md`](docs/WEIGHTS.md) — weight provenance and hosting
+- [`STATUS.md`](STATUS.md) — release status
+
+## Licensing
+
+Repository code is Apache-2.0 (see `LICENSE`). The upstream weights are Apache-2.0; see `docs/WEIGHTS.md`.
