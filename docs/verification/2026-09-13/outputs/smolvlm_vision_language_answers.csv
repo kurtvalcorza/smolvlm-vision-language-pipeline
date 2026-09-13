@@ -1,0 +1,3 @@
+index,prompt,new_tokens,truncated,text
+0,Describe this image in one sentence.,16,False,The image contains a red square and a blue circle on a white background.
+1,"How many shapes are in the image, and what colour is each one?",20,False,"There are two shapes in the image. Shape A is red, and shape B is blue."

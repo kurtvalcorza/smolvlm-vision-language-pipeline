@@ -1,0 +1,141 @@
+{
+  "schema": {
+    "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+    "images": [
+      1,
+      1
+    ],
+    "image_side_px": [
+      1,
+      4096
+    ],
+    "prompt_chars": [
+      1,
+      2000
+    ],
+    "max_new_tokens": [
+      1,
+      512
+    ],
+    "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+    "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+  },
+  "inputs": [
+    {
+      "id": "synthetic_square_circle_384",
+      "mode": "RGB",
+      "size": [
+        384,
+        384
+      ]
+    }
+  ],
+  "prompt": null,
+  "prompt_chars": null,
+  "generation": {
+    "max_new_tokens": 96,
+    "do_sample": false,
+    "decoding": "greedy"
+  },
+  "verdict": "accepted",
+  "findings": [
+    {
+      "input": "over-long-prompt-probe",
+      "verdict": "rejected",
+      "message": "prompt exceeds MAX_TEXT_CHARS=2000: 2001"
+    }
+  ],
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47",
+  "n_prompts": 2,
+  "prompts": [
+    {
+      "schema": {
+        "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+        "images": [
+          1,
+          1
+        ],
+        "image_side_px": [
+          1,
+          4096
+        ],
+        "prompt_chars": [
+          1,
+          2000
+        ],
+        "max_new_tokens": [
+          1,
+          512
+        ],
+        "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+        "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+      },
+      "inputs": [
+        {
+          "id": "synthetic_square_circle_384",
+          "mode": "RGB",
+          "size": [
+            384,
+            384
+          ]
+        }
+      ],
+      "prompt": "Describe this image in one sentence.",
+      "prompt_chars": 36,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      },
+      "verdict": "accepted",
+      "findings": [],
+      "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+      "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+    },
+    {
+      "schema": {
+        "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+        "images": [
+          1,
+          1
+        ],
+        "image_side_px": [
+          1,
+          4096
+        ],
+        "prompt_chars": [
+          1,
+          2000
+        ],
+        "max_new_tokens": [
+          1,
+          512
+        ],
+        "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+        "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+      },
+      "inputs": [
+        {
+          "id": "synthetic_square_circle_384",
+          "mode": "RGB",
+          "size": [
+            384,
+            384
+          ]
+        }
+      ],
+      "prompt": "How many shapes are in the image, and what colour is each one?",
+      "prompt_chars": 62,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      },
+      "verdict": "accepted",
+      "findings": [],
+      "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+      "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+    }
+  ]
+}

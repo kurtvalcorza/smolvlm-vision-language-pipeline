@@ -1,0 +1,252 @@
+{
+  "answers": [
+    {
+      "index": 0,
+      "prompt": "Describe this image in one sentence.",
+      "text": "The image contains a red square and a blue circle on a white background.",
+      "new_tokens": 16,
+      "truncated": false,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      },
+      "seconds": 7.803
+    },
+    {
+      "index": 1,
+      "prompt": "How many shapes are in the image, and what colour is each one?",
+      "text": "There are two shapes in the image. Shape A is red, and shape B is blue.",
+      "new_tokens": 20,
+      "truncated": false,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      },
+      "seconds": 3.486
+    }
+  ],
+  "sanity_checks": {
+    "one_answer_per_prompt": true,
+    "answers_are_text": true,
+    "greedy_as_requested": true,
+    "budget_as_requested": true
+  },
+  "evaluation_report": {
+    "task": "image + text -> text generation (captioning and visual question answering)",
+    "score_semantics": "the generated text carries no score, no probability and no correctness signal; a fluent, specific answer is not evidence that it is right. Greedy decoding makes the text reproducible on a fixed device and dtype, which is a reproducibility property, not a quality one",
+    "sample_kind": "synthetic (drawn in this cell)",
+    "n_answers": 2,
+    "answers": [
+      {
+        "prompt": "Describe this image in one sentence.",
+        "new_tokens": 16,
+        "truncated": false,
+        "generation": {
+          "max_new_tokens": 96,
+          "do_sample": false,
+          "decoding": "greedy"
+        }
+      },
+      {
+        "prompt": "How many shapes are in the image, and what colour is each one?",
+        "new_tokens": 20,
+        "truncated": false,
+        "generation": {
+          "max_new_tokens": 96,
+          "do_sample": false,
+          "decoding": "greedy"
+        }
+      }
+    ],
+    "references_supplied": null,
+    "metrics": [],
+    "baselines": [],
+    "verdict": "not-measurable",
+    "reason": "open-ended generated text has no intrinsic correctness signal and this repository ships no metric helper; reading the answers against what you can see is a sanity check on one sample, not a measurement",
+    "needs": "labelled data matched to the use and the caller's own scoring code over enough items to state a dispersion: question-answer pairs with reference answers for VQA accuracy, reference captions for a caption metric such as CIDEr, or document pages with gold answers for document-QA exact match. This repository ships no metric helper, so there is nothing to compute here.",
+    "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+    "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+  },
+  "input_manifest": {
+    "schema": {
+      "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+      "images": [
+        1,
+        1
+      ],
+      "image_side_px": [
+        1,
+        4096
+      ],
+      "prompt_chars": [
+        1,
+        2000
+      ],
+      "max_new_tokens": [
+        1,
+        512
+      ],
+      "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+      "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+    },
+    "inputs": [
+      {
+        "id": "synthetic_square_circle_384",
+        "mode": "RGB",
+        "size": [
+          384,
+          384
+        ]
+      }
+    ],
+    "prompt": null,
+    "prompt_chars": null,
+    "generation": {
+      "max_new_tokens": 96,
+      "do_sample": false,
+      "decoding": "greedy"
+    },
+    "verdict": "accepted",
+    "findings": [
+      {
+        "input": "over-long-prompt-probe",
+        "verdict": "rejected",
+        "message": "prompt exceeds MAX_TEXT_CHARS=2000: 2001"
+      }
+    ],
+    "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+    "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47",
+    "n_prompts": 2,
+    "prompts": [
+      {
+        "schema": {
+          "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+          "images": [
+            1,
+            1
+          ],
+          "image_side_px": [
+            1,
+            4096
+          ],
+          "prompt_chars": [
+            1,
+            2000
+          ],
+          "max_new_tokens": [
+            1,
+            512
+          ],
+          "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+          "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+        },
+        "inputs": [
+          {
+            "id": "synthetic_square_circle_384",
+            "mode": "RGB",
+            "size": [
+              384,
+              384
+            ]
+          }
+        ],
+        "prompt": "Describe this image in one sentence.",
+        "prompt_chars": 36,
+        "generation": {
+          "max_new_tokens": 96,
+          "do_sample": false,
+          "decoding": "greedy"
+        },
+        "verdict": "accepted",
+        "findings": [],
+        "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+        "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+      },
+      {
+        "schema": {
+          "input": "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string",
+          "images": [
+            1,
+            1
+          ],
+          "image_side_px": [
+            1,
+            4096
+          ],
+          "prompt_chars": [
+            1,
+            2000
+          ],
+          "max_new_tokens": [
+            1,
+            512
+          ],
+          "decoding": "greedy by default (do_sample=False), deterministic on a fixed device and dtype; do_sample=True trades that determinism for varied wording",
+          "preprocessing": "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+        },
+        "inputs": [
+          {
+            "id": "synthetic_square_circle_384",
+            "mode": "RGB",
+            "size": [
+              384,
+              384
+            ]
+          }
+        ],
+        "prompt": "How many shapes are in the image, and what colour is each one?",
+        "prompt_chars": 62,
+        "generation": {
+          "max_new_tokens": 96,
+          "do_sample": false,
+          "decoding": "greedy"
+        },
+        "verdict": "accepted",
+        "findings": [],
+        "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+        "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+      }
+    ]
+  },
+  "ceilings": {
+    "MAX_IMAGES": 1,
+    "MAX_IMAGE_SIDE": 4096,
+    "MAX_TEXT_CHARS": 2000,
+    "MAX_NEW_TOKENS": 512,
+    "DEFAULT_MAX_NEW_TOKENS": 128,
+    "DECODING": "greedy"
+  },
+  "sample": {
+    "name": "synthetic_square_circle_384",
+    "kind": "synthetic (drawn in this cell)",
+    "width": 384,
+    "height": 384,
+    "pixel_sha256": "bec2a2b599ecb781943e1b0adebdac8c6403e2d28df9b2ffb8be5c82a2a58b56"
+  },
+  "notebook_source": {
+    "repository": "smolvlm-vision-language-pipeline",
+    "repository_revision": "f78ac0ce3cbbedfb6326a4f5f844134c3cb3c06c",
+    "embedded_module": "src/smolvlm_vision_language_pipeline/pipeline.py",
+    "embedded_modules": [
+      "src/smolvlm_vision_language_pipeline/pipeline.py"
+    ],
+    "module_sha256": "785586dd03b7711f8358e50556491f5ce0186090f4370c26189220e1e6b0332d",
+    "generator": "build_notebook.py/2",
+    "notebook_spec": "1.1"
+  },
+  "repository_revision": "f78ac0ce3cbbedfb6326a4f5f844134c3cb3c06c",
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47",
+  "model_license": "apache-2.0",
+  "runtime": {
+    "python": "3.12.3",
+    "torch": "2.14.0+cu130",
+    "transformers": "4.57.6",
+    "pillow": "11.3.0",
+    "device": "cuda:0",
+    "dtype": "bfloat16",
+    "source": "local-snapshot"
+  }
+}
