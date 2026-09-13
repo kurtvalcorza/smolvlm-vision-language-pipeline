@@ -275,12 +275,7 @@ class SmolVLMPipeline:
         weights_dir: str | Path | None = None,
         allow_download: bool = False,
     ) -> SmolVLMPipeline:
-        import torch
-        from transformers import AutoModelForImageTextToText, AutoProcessor
-
         root = Path(weights_dir or DEFAULT_WEIGHTS_DIR)
-        resolved_device = device or ("cuda:0" if torch.cuda.is_available() else "cpu")
-        dtype = torch.bfloat16 if resolved_device.startswith("cuda") else torch.float32
         common: dict[str, Any] = {"trust_remote_code": False}
         if (root / MANIFEST_NAME).is_file():
             stage_missing_files(root, allow_download=allow_download)
@@ -293,6 +288,12 @@ class SmolVLMPipeline:
                 f"no verified snapshot at {root} and allow_download=False; "
                 f"stage it with: hf download {MODEL_ID} --revision {MODEL_REVISION} --local-dir {root}"
             )
+        # Refuse invalid snapshots before importing model libraries.
+        import torch
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+
+        resolved_device = device or ("cuda:0" if torch.cuda.is_available() else "cpu")
+        dtype = torch.bfloat16 if resolved_device.startswith("cuda") else torch.float32
         processor = AutoProcessor.from_pretrained(location, **common)
         model = AutoModelForImageTextToText.from_pretrained(location, dtype=dtype, **common)
         model = model.eval().to(resolved_device)
