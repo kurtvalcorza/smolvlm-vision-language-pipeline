@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -111,6 +111,154 @@ def build_messages(prompt: str) -> list[dict[str, Any]]:
     return [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt}]}]
 
 
+INPUT_SCHEMA: dict[str, Any] = {
+    "input": (
+        "exactly one PIL.Image.Image (any mode, converted to RGB) plus one non-empty user prompt string"
+    ),
+    "images": [1, MAX_IMAGES],
+    "image_side_px": [1, MAX_IMAGE_SIDE],
+    "prompt_chars": [1, MAX_TEXT_CHARS],
+    "max_new_tokens": [1, MAX_NEW_TOKENS],
+    "decoding": (
+        f"{DECODING} by default (do_sample=False), deterministic on a fixed device and dtype; "
+        "do_sample=True trades that determinism for varied wording"
+    ),
+    "preprocessing": (
+        "image converted to RGB; the processor resizes it so the longest edge is 2048 px (aspect ratio "
+        "preserved, nothing cropped) and splits it into 512-px tiles of 64 visual tokens each; the prompt "
+        "is wrapped in the snapshot's chat template as one user turn (see build_messages)"
+    ),
+}
+
+
+def _check_inputs(images: Any, prompt: Any, max_new_tokens: Any) -> list[Image.Image]:
+    """Raise TypeError/ValueError naming the first violated ceiling; return the images as a list.
+
+    ``SmolVLMPipeline.generate`` and ``validate_inputs`` both route through this function so their
+    acceptance criteria cannot diverge.
+    """
+    if isinstance(images, Image.Image):
+        images = [images]
+    if not isinstance(images, list | tuple):
+        raise TypeError("images must be a PIL.Image.Image or a list of them")
+    if not 1 <= len(images) <= MAX_IMAGES:
+        raise ValueError(f"image count must be between 1 and MAX_IMAGES={MAX_IMAGES}, got {len(images)}")
+    for image in images:
+        if not isinstance(image, Image.Image):
+            raise TypeError(f"each image must be a PIL.Image.Image, got {type(image).__name__}")
+        width, height = image.size
+        if width < 1 or height < 1 or max(width, height) > MAX_IMAGE_SIDE:
+            raise ValueError(f"image side outside 1..MAX_IMAGE_SIDE={MAX_IMAGE_SIDE} px: {image.size}")
+    if not isinstance(prompt, str):
+        raise TypeError("prompt must be a str")
+    if not prompt.strip():
+        raise ValueError("prompt must not be empty")
+    if len(prompt) > MAX_TEXT_CHARS:
+        raise ValueError(f"prompt exceeds MAX_TEXT_CHARS={MAX_TEXT_CHARS}: {len(prompt)}")
+    if isinstance(max_new_tokens, bool) or not isinstance(max_new_tokens, int):
+        raise TypeError("max_new_tokens must be an int")
+    if not 1 <= max_new_tokens <= MAX_NEW_TOKENS:
+        raise ValueError(f"max_new_tokens must be between 1 and MAX_NEW_TOKENS={MAX_NEW_TOKENS}")
+    return list(images)
+
+
+def validate_inputs(
+    images: Image.Image | list[Image.Image],
+    prompt: str,
+    *,
+    max_new_tokens: int = DEFAULT_MAX_NEW_TOKENS,
+    do_sample: bool = False,
+    names: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    """Validation stage: return the input manifest (schema, observations, request, verdict).
+
+    Rejection is reported by raising exactly as ``generate`` would; a caller that wants the finding
+    recorded catches the exception and stores ``str(exc)`` under ``findings``.
+    """
+    checked = _check_inputs(images, prompt, max_new_tokens)
+    if names is not None and len(names) != len(checked):
+        raise ValueError("names must have one entry per image")
+    return {
+        "schema": dict(INPUT_SCHEMA),
+        "inputs": [
+            {
+                "id": names[index] if names else f"image-{index}",
+                "mode": image.mode,
+                "size": list(image.size),
+            }
+            for index, image in enumerate(checked)
+        ],
+        "prompt": prompt,
+        "prompt_chars": len(prompt),
+        "generation": {
+            "max_new_tokens": max_new_tokens,
+            "do_sample": bool(do_sample),
+            "decoding": "sampling" if do_sample else DECODING,
+        },
+        "verdict": "accepted",
+        "findings": [],
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+    }
+
+
+_NEEDS = (
+    "labelled data matched to the use and the caller's own scoring code over enough items to state a "
+    "dispersion: question-answer pairs with reference answers for VQA accuracy, reference captions for a "
+    "caption metric such as CIDEr, or document pages with gold answers for document-QA exact match. This "
+    "repository ships no metric helper, so there is nothing to compute here."
+)
+_SCORE_SEMANTICS = (
+    "the generated text carries no score, no probability and no correctness signal; a fluent, specific "
+    "answer is not evidence that it is right. Greedy decoding makes the text reproducible on a fixed "
+    "device and dtype, which is a reproducibility property, not a quality one"
+)
+
+
+def evaluation_report(
+    result: Mapping[str, Any] | Sequence[Mapping[str, Any]],
+    references: Any = None,
+    *,
+    sample_kind: str = "synthetic",
+) -> dict[str, Any]:
+    """Evaluation stage: a machine-readable report, always ``not-measurable`` for this capability.
+
+    ``result`` is one ``generate`` result or a sequence of them. Open-ended image-conditioned
+    generation has no intrinsic correctness signal and this repository ships no metric helper, so the
+    verdict is always ``not-measurable`` (EVAL9) and ``needs`` names the labelled data a real
+    evaluation would require. ``references`` is accepted and echoed so a caller can record what they
+    compared against by hand; supplying it does not create a metric.
+    """
+    results = [result] if isinstance(result, Mapping) else list(result)
+    return {
+        "task": "image + text -> text generation (captioning and visual question answering)",
+        "score_semantics": _SCORE_SEMANTICS,
+        "sample_kind": sample_kind,
+        "n_answers": len(results),
+        "answers": [
+            {
+                "prompt": item.get("prompt"),
+                "new_tokens": item.get("new_tokens"),
+                "truncated": item.get("truncated"),
+                "generation": dict(item.get("generation") or {}),
+            }
+            for item in results
+        ],
+        "references_supplied": references if references is None else list(references),
+        "metrics": [],
+        "baselines": [],
+        "verdict": "not-measurable",
+        "reason": (
+            "open-ended generated text has no intrinsic correctness signal and this repository ships no "
+            "metric helper; reading the answers against what you can see is a sanity check on one "
+            "sample, not a measurement"
+        ),
+        "needs": _NEEDS,
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+    }
+
+
 @dataclass
 class SmolVLMPipeline:
     """``_runner(image, prompt, max_new_tokens, do_sample)`` returns ``{"text": str, "new_tokens": int}``."""
@@ -161,29 +309,7 @@ class SmolVLMPipeline:
         return cls(runner, resolved_device, str(dtype).removeprefix("torch."), source)
 
     def _validate(self, images: Any, prompt: Any, max_new_tokens: int) -> list[Image.Image]:
-        if isinstance(images, Image.Image):
-            images = [images]
-        if not isinstance(images, list | tuple):
-            raise TypeError("images must be a PIL.Image.Image or a list of them")
-        if not 1 <= len(images) <= MAX_IMAGES:
-            raise ValueError(f"image count must be between 1 and MAX_IMAGES={MAX_IMAGES}, got {len(images)}")
-        for image in images:
-            if not isinstance(image, Image.Image):
-                raise TypeError(f"each image must be a PIL.Image.Image, got {type(image).__name__}")
-            width, height = image.size
-            if width < 1 or height < 1 or max(width, height) > MAX_IMAGE_SIDE:
-                raise ValueError(f"image side outside 1..MAX_IMAGE_SIDE={MAX_IMAGE_SIDE} px: {image.size}")
-        if not isinstance(prompt, str):
-            raise TypeError("prompt must be a str")
-        if not prompt.strip():
-            raise ValueError("prompt must not be empty")
-        if len(prompt) > MAX_TEXT_CHARS:
-            raise ValueError(f"prompt exceeds MAX_TEXT_CHARS={MAX_TEXT_CHARS}: {len(prompt)}")
-        if isinstance(max_new_tokens, bool) or not isinstance(max_new_tokens, int):
-            raise TypeError("max_new_tokens must be an int")
-        if not 1 <= max_new_tokens <= MAX_NEW_TOKENS:
-            raise ValueError(f"max_new_tokens must be between 1 and MAX_NEW_TOKENS={MAX_NEW_TOKENS}")
-        return list(images)
+        return _check_inputs(images, prompt, max_new_tokens)
 
     def generate(
         self,

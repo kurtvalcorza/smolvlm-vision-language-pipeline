@@ -2,6 +2,7 @@ from .pipeline import (
     DECODING,
     DEFAULT_MAX_NEW_TOKENS,
     DEFAULT_WEIGHTS_DIR,
+    INPUT_SCHEMA,
     MAX_IMAGE_SIDE,
     MAX_IMAGES,
     MAX_NEW_TOKENS,
@@ -12,7 +13,9 @@ from .pipeline import (
     MODEL_REVISION,
     SmolVLMPipeline,
     build_messages,
+    evaluation_report,
     stage_missing_files,
+    validate_inputs,
     verify_snapshot,
 )
 
@@ -20,6 +23,7 @@ __all__ = [
     "DECODING",
     "DEFAULT_MAX_NEW_TOKENS",
     "DEFAULT_WEIGHTS_DIR",
+    "INPUT_SCHEMA",
     "MAX_IMAGE_SIDE",
     "MAX_IMAGES",
     "MAX_NEW_TOKENS",
@@ -30,6 +34,8 @@ __all__ = [
     "MODEL_REVISION",
     "SmolVLMPipeline",
     "build_messages",
+    "evaluation_report",
     "stage_missing_files",
+    "validate_inputs",
     "verify_snapshot",
 ]

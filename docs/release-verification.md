@@ -1,9 +1,9 @@
 # Release verification
 
-`tutorials/smolvlm_vision_language_colab.ipynb` (`TASK-INFERENCE`) is a **release candidate** until the exact notebook revision has
-executed top-to-bottom in a clean supported runtime. Unit tests, JSON validation, code-cell
-compilation, and `tools/validate_release_assets.py` are necessary checks but are **not** runtime
-evidence under DIMER Notebook Specification 1.0. This file is the durable release-gate record for
+`tutorials/smolvlm_vision_language_colab.ipynb` (`TASK-INFERENCE`, **standalone** carrier) is a **release candidate** until the exact notebook
+revision has executed top-to-bottom in a clean supported runtime. Unit tests, JSON validation,
+code-cell compilation, the generator parity checks and `tools/validate_release_assets.py` are
+necessary checks but are **not** runtime evidence under DIMER Notebook Specification 1.1. This file is the durable release-gate record for
 the notebook.
 
 ## Automatic coverage (static, every pull request)
@@ -14,35 +14,48 @@ CI runs `tools/validate_release_assets.py`, which checks:
   persisted outputs or execution counts; no unresolved placeholder markers; every code cell
   is preceded by an explanatory markdown cell;
 - exactly one tutorial notebook, named in `tutorials/README.md` with its `TASK-INFERENCE`
-  profile and the notebook-spec version; `metadata.dimer` declares that profile and spec `1.0`;
-- the fresh-runtime bootstrap (clone by canonical URL, `DIMER_TUTORIAL_REF`, detached checkout of
-  the requested revision, restart-on-stale-import guard) and the recorded `REPO_SHA` in exports;
-- `MODEL_ID`/`MODEL_REVISION` are imported from the package rather than hard-coded, the revision is
-  a 40-hex immutable commit, and the same identity string appears in `README.md`,
-  `MODEL_CARD.md`, and `docs/WEIGHTS.md` with no stray revisions;
+  profile, the notebook-spec version and the standalone carrier; `metadata.dimer` declares that
+  profile, spec `1.1`, `standalone: true` and `generated_from` (repository, revision, module
+  SHA-256, generator);
+- the standalone carrier (ST1–ST6, PAR1–PAR3): no clone, repository install or repository import on
+  the primary path; exactly one cell tagged `embedded_module` equal to
+  `src/smolvlm_vision_language_pipeline/pipeline.py` after the generator's documented rewrites; the
+  inline `MANIFEST` equal to the committed snapshot manifest and the inline `PINS` equal to the
+  `pyproject.toml` runtime pins; the notebook byte-identical (on LF) to `tools/build_notebook.py`
+  output for its recorded revision; the pinned-install cell with its restart-on-stale-import guard;
+  `NOTEBOOK_SOURCE` recorded in exports;
+- `MODEL_ID`/`MODEL_REVISION` are bound only in the carried module cell (and repeated in the inline
+  manifest, which the notebook asserts against the module before fetching), the revision is a 40-hex
+  immutable commit, and the same identity string appears in `README.md`, `MODEL_CARD.md`, and
+  `docs/WEIGHTS.md` with no stray revisions;
 - the profile-specific public-API calls (`stage_missing_files`, `verify_snapshot`,
-  `SmolVLMPipeline.from_pretrained`, `generate` with explicit `max_new_tokens` and
-  `do_sample=False`), the ceiling and decoding constants imported from the package, the sanity
-  checks on greedy settings and token budget, the export with `truncated` flags and `pipe.dtype`,
+  `SmolVLMPipeline.from_pretrained(weights_dir=...)`, `validate_inputs` per prompt, `generate` with
+  explicit `max_new_tokens` and `do_sample=False`, and `evaluation_report` over every answer), the
+  ceiling and decoding constants carried by the module, the plumbing checks on greedy settings and
+  token budget, the export with `truncated` flags and `pipe.dtype`,
   the learner-facing statements (greedy by default, free text with no score, the card's
   hallucination observation, SmolLM2-360M-Instruct cross-reference, no metric helper, no metric
   reported, single image) and the gated-off BYOD default listed in the validator; forbidden
-  patterns (credential-in-URL, direct `transformers` or `huggingface_hub` calls that bypass the
-  pipeline, `apply_chat_template`, `.generate(**`, `trust_remote_code=True`, `pickle.load`,
-  `torch.load(`, `extractall(`);
+  patterns (credential-in-URL, any `git clone` / `github.com` / repository import on the primary
+  path, a mutable `revision='main'`, direct `transformers` or `huggingface_hub` use **outside the
+  carried module cell**, `apply_chat_template`, `.generate(**`, `trust_remote_code=True`,
+  `pickle.load`, `torch.load(`, `extractall(`);
 - `STATUS.md`, `README.md` and `tutorials/README.md` agree on one release-status token and no
   document makes an unsupported release-grade, production-readiness or benchmark claim;
 - `MODEL_CARD.md` front matter (`model_card_spec: "1.1"`), single H1, required heading order, and
   immutable provenance.
 
-These are source/provenance checks. They are **not** execution evidence.
+CI also runs `ruff check src tests tools`, `tools/build_notebook.py --check`, and the offline unit
+suite (`tests/test_pipeline.py`, `tests/test_role_helpers.py`, `tests/test_notebook_parity.py`;
+injected runner, no weights). These are source/provenance and unit checks. They are **not** execution
+evidence.
 
 ## Executor paths
 
 | Path | Runtime | Role |
 |---|---|---|
 | Google Colab (supported user path) | Colab CPU runtime (CUDA bfloat16 used automatically when present) | The runtime the tutorial is written for; a clean top-to-bottom run here is promotion evidence |
-| Kaggle CLI kernel or equivalent fresh container | Fresh CPU or GPU container, Python 3.12 image; the committed notebook executed verbatim, cell by cell, in a fresh interpreter with a `google.colab` shim and `DIMER_TUTORIAL_REF` set to the candidate commit | Reproducible clean-room executor of the same class; needed whenever the hosted kernel pre-imports a NumPy or Pillow that differs from the `pyproject.toml` pins, because the tutorial's fail-closed stale-import guard correctly halts the in-kernel path after the pinned install |
+| Kaggle CLI kernel or equivalent fresh container | Fresh CPU or GPU container, Python 3.12 image; the committed notebook executed verbatim, cell by cell, in a fresh interpreter with a `google.colab` shim and **no repository checkout** (the notebook is standalone) | Reproducible clean-room executor of the same class; needed whenever the hosted kernel pre-imports a NumPy or Pillow that differs from the `pyproject.toml` pins, because the tutorial's fail-closed stale-import guard correctly halts the in-kernel path after the pinned install |
 | Local harness (pre-flight only) | Workstation, sequential cell executor with a `google.colab` shim, empty model cache | Builder pre-flight to catch defects before spending cloud runs; **not** a supported runtime and not promotion evidence |
 
 ## Supported release verification procedure
@@ -51,19 +64,25 @@ Before changing the registry status from `Candidate` to `Release-grade`:
 
 1. resolve the exact PR/commit head under review and confirm static CI is green;
 2. open that exact notebook revision in a new CPU or CUDA runtime (Colab, or a fresh-container
-   executor above) with `DIMER_TUTORIAL_REF` set to the candidate commit, an empty Hugging Face
-   cache, and no pre-staged weight files under `weights/smolvlm-500m-instruct/`;
+   executor above) with **no repository checkout**, an empty Hugging Face cache, and no pre-staged
+   weight files under `weights/smolvlm-500m-instruct/`;
 3. run the notebook top-to-bottom without editing implementation cells (form parameters at their
-   defaults for the sample path: `USE_BYOD = False`, `PROMPTS` = the two default prompts);
-4. verify that Section 1 reports `repository_revision` equal to the candidate commit and that the
-   installed core package versions equal the `pyproject.toml` pins (`torch==2.14.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`);
+   defaults for the sample path: `USE_BYOD = False`, `PROMPTS` = the two default prompts,
+   `MAX_NEW_TOKENS_PER_PROMPT = 96`);
+4. verify that Section 1 reports `NOTEBOOK_SOURCE.repository_revision` equal to the revision recorded
+   in `metadata.dimer.generated_from` and that the installed core package versions equal the inline
+   `PINS` (= `pyproject.toml`) (`torch==2.14.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`);
 5. verify every default-path stage completes:
-   - fresh bootstrap from GitHub at the candidate revision;
+   - pinned runtime installed from the inline `PINS` with no GitHub access;
+   - the carried module cell executes (defines `SmolVLMPipeline`, `validate_inputs`,
+     `evaluation_report`, `build_messages`, `verify_snapshot`, `stage_missing_files`) with no import
+     of the repository package;
    - synthetic 384 x 384 drawing (red square, blue circle) generated in code with its pixel SHA-256 printed and the two default prompts listed;
-   - ceilings `MAX_IMAGES = 1`, `MAX_IMAGE_SIDE = 4096`, `MAX_TEXT_CHARS = 2000`, `MAX_NEW_TOKENS = 512`, `DEFAULT_MAX_NEW_TOKENS = 128`, `DECODING = greedy` printed and the input accepted before model execution;
+   - ceilings `MAX_IMAGES = 1`, `MAX_IMAGE_SIDE = 4096`, `MAX_TEXT_CHARS = 2000`, `MAX_NEW_TOKENS = 512`, `DEFAULT_MAX_NEW_TOKENS = 128`, `DECODING = greedy` printed, and `validate_inputs` writing `outputs/smolvlm_vision_language_input_manifest.json` with verdict `accepted`, one sub-manifest per prompt, and one recorded rejection finding from the over-long-prompt probe;
    - `stage_missing_files(..., allow_download=True)` reporting `['model.safetensors']` fetched from `HuggingFaceTB/SmolVLM-500M-Instruct` at the immutable revision, `verify_snapshot` reporting the manifest file count, and `SmolVLMPipeline.from_pretrained` reporting `source: local-snapshot` and the effective dtype;
-   - `generate` returning one answer per prompt with `do_sample: False`, `decoding: greedy`, `max_new_tokens: 96` in every `generation` block, all four sanity checks true, and the "no metric is reported" line printed;
-   - `outputs/smolvlm_vision_language_result.json` written with the indexed answers (prompt, text, new_tokens, truncated, generation, seconds), the repository SHA, model identifier, immutable model revision, snapshot summary, runtime versions, device and dtype;
+   - `generate` returning one answer per prompt with `do_sample: False`, `decoding: greedy`, `max_new_tokens: 96` in every `generation` block and all four plumbing checks true;
+   - `evaluation_report` writing `outputs/smolvlm_vision_language_evaluation_report.json` with verdict `not-measurable`, an empty `metrics` list, one `answers` entry per prompt with its `new_tokens`/`truncated`, and `needs` naming the labelled data a real evaluation requires;
+   - `outputs/smolvlm_vision_language_result.json` and `outputs/smolvlm_vision_language_answers.csv` written with the indexed answers (prompt, text, new_tokens, truncated, generation, seconds), plus `NOTEBOOK_SOURCE`, the model identifier, the immutable model revision, the model licence, the runtime versions, device and dtype;
 6. verify the exports exist and the interpretation section matches the observed path;
 7. record the notebook Git blob id, commit, runtime (platform, Python, PyTorch, Transformers, Pillow, device, dtype), model
    identifier and immutable revision, whether the model cache and weights directory were clean,
@@ -95,9 +114,12 @@ package, not this notebook, and is not notebook execution evidence.
 
 ## Current status
 
-The notebook source is complete and passes the static checks above; **no clean-runtime execution
-has been recorded**, so the registry status is **Candidate** and the manual-evidence row is pending.
+The notebook source is complete and passes the static checks above, including the generator parity
+checks (`--check` OK); **no clean-runtime execution has been recorded**, so the registry status is **Candidate** and the manual-evidence row is pending.
 Promotion requires a reviewer to confirm a recorded run against the notebook blob under review and
 an integrator to promote it; promotion is not performed by the builder. The commit that adds a
 recorded-execution row changes documentation only; the executed source is the commit named in the
-row.
+row. One fact a reviewer should weigh: **the standalone carrier itself — executing the carried
+module cell in a runtime that has no repository checkout — has been validated statically only
+(parity PASS) and never run**, so the clean run will be the first execution of the standalone path
+and of the real `hf_hub_download` staging path.
