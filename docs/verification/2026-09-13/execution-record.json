@@ -1,0 +1,99 @@
+{
+  "repository": "smolvlm-vision-language-pipeline",
+  "commit": "fe478b69e92bcc144cb2a38e7f12e5bbe65a1873",
+  "notebook": "smolvlm_vision_language_colab.ipynb",
+  "git_blob": "8e97c78fc79e38124910c3d40850874ac5fb0194",
+  "sha256": "7ecfe91336154130a6a6523ebab2e0e0e0a3dbbeec85ac341bfeaa3c8ffdc405",
+  "status_before": [],
+  "gpu": "Tesla T4, 15360 MiB, 580.82.07",
+  "status": "passed",
+  "hf_cache_clean_before": true,
+  "weights_clean_before": true,
+  "executor": "Colab CLI -> isolated Python 3.12 -> unchanged code cells",
+  "python": "3.12.3",
+  "exit_code": 0,
+  "execution_summary": {
+    "input_sha256": "7ecfe91336154130a6a6523ebab2e0e0e0a3dbbeec85ac341bfeaa3c8ffdc405",
+    "cells": [
+      {
+        "index": 3,
+        "seconds": 167.529,
+        "error": null
+      },
+      {
+        "index": 5,
+        "seconds": 0.008,
+        "error": null
+      },
+      {
+        "index": 7,
+        "seconds": 15.422,
+        "error": null
+      },
+      {
+        "index": 9,
+        "seconds": 0.009,
+        "error": null
+      },
+      {
+        "index": 11,
+        "seconds": 0.002,
+        "error": null
+      },
+      {
+        "index": 13,
+        "seconds": 11.291,
+        "error": null
+      },
+      {
+        "index": 15,
+        "seconds": 0.001,
+        "error": null
+      },
+      {
+        "index": 17,
+        "seconds": 0.002,
+        "error": null
+      }
+    ],
+    "status": "passed",
+    "source_cells_unchanged": true
+  },
+  "seconds": 198.308,
+  "verification_checks": {
+    "original_sha256_matches_baseline": true,
+    "remote_input_sha256_matches_baseline": true,
+    "python_matches_supported_3_12": true,
+    "source_cells_unchanged": true,
+    "all_code_cells_executed_without_errors": true,
+    "inference_device_is_cuda": true,
+    "exported_source_revision_matches_notebook": true,
+    "input_manifest_accepted": true,
+    "negative_validation_probe_recorded": true,
+    "all_notebook_sanity_checks_pass": true,
+    "all_inline_pins_match_installed_versions": true
+  },
+  "verified_status": "PASS",
+  "execution_date_utc": "2026-09-13",
+  "cell_wall_seconds": 194.264,
+  "total_wall_seconds_including_environment_setup": 198.308,
+  "runtime": {
+    "python": "3.12.3",
+    "torch": "2.14.0+cu130",
+    "transformers": "4.57.6",
+    "pillow": "11.3.0",
+    "device": "cuda:0",
+    "dtype": "bfloat16",
+    "source": "local-snapshot"
+  },
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47",
+  "executor_source_sha256": "21c82435e1559a24e391bca9afa0743269602578a525068eda273dc9e4bd02bc",
+  "cleanup": {
+    "stop_output": "[colab] Stopping session 'dimer-gpu-clean312-0913'...\n[colab] Session terminated.\n",
+    "sessions_after_output": "[colab] No active sessions found on server.\n"
+  },
+  "scope": "unchanged default sample code cells; GPU inference and contract checks",
+  "release_status": "Candidate; evidence review pending",
+  "native_hosted_notebook_run": "Aborted in install cell after Python 3.13 mismatch was confirmed; not a completed runtime result"
+}

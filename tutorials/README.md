@@ -14,7 +14,7 @@ and regenerate (`python tools/build_notebook.py`; `--check` is enforced by the v
 
 | Notebook | Profile | Carrier | Capability | Default runtime | BYOD | Release status |
 |---|---|---|---|---|---|---|
-| `smolvlm_vision_language_colab.ipynb` | `TASK-INFERENCE` | standalone (generated) | SmolVLM-500M-Instruct image captioning and VQA on one synthetic drawing with two prompts; greedy deterministic decoding with an explicit token budget and `truncated` flag; free-text output with no score; `validate_inputs` → one input manifest with a per-prompt sub-manifest; `evaluation_report` → always `not-measurable` (no metric helper exists); hallucination risk stated | CPU float32 (CUDA bfloat16 used automatically when available) | one image file plus a `PROMPTS` form field, gated off by default | **Candidate** — static checks pass; the clean-runtime execution row in `../docs/release-verification.md` is pending and must be recorded for the exact notebook revision before promotion |
+| `smolvlm_vision_language_colab.ipynb` | `TASK-INFERENCE` | standalone (generated) | SmolVLM-500M-Instruct image captioning and VQA on one synthetic drawing with two prompts; greedy deterministic decoding with an explicit token budget and `truncated` flag; free-text output with no score; `validate_inputs` → one input manifest with a per-prompt sub-manifest; `evaluation_report` → always `not-measurable` (no metric helper exists); hallucination risk stated | CPU float32 (CUDA bfloat16 used automatically when available) | one image file plus a `PROMPTS` form field, gated off by default | **Candidate** — 8/8 default code cells passed on Colab T4 / isolated Python 3.12 on 2026-09-13; [recorded evidence](../docs/release-verification.md) awaits review |
 
 ## Conformance notes
 
@@ -31,3 +31,5 @@ and regenerate (`python tools/build_notebook.py`; `--check` is enforced by the v
   clean-runtime execution requirement; a release review must confirm that a recorded clean run in
   `docs/release-verification.md` matches the notebook revision under review before the status is
   promoted to `Release-grade`.
+
+Current source update: snapshot validation now runs before model-library imports (Kokoro also validates the language first), so rejected requests fail with the intended validation error even when model libraries are absent. The standalone notebook was regenerated from this source. The retained 2026-09-13 GPU run identifies the earlier notebook blob; the regenerated notebook has not had a fresh GPU execution. Status remains **Candidate**.

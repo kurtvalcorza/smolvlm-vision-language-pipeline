@@ -1,0 +1,36 @@
+{
+  "task": "image + text -> text generation (captioning and visual question answering)",
+  "score_semantics": "the generated text carries no score, no probability and no correctness signal; a fluent, specific answer is not evidence that it is right. Greedy decoding makes the text reproducible on a fixed device and dtype, which is a reproducibility property, not a quality one",
+  "sample_kind": "synthetic (drawn in this cell)",
+  "n_answers": 2,
+  "answers": [
+    {
+      "prompt": "Describe this image in one sentence.",
+      "new_tokens": 16,
+      "truncated": false,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      }
+    },
+    {
+      "prompt": "How many shapes are in the image, and what colour is each one?",
+      "new_tokens": 20,
+      "truncated": false,
+      "generation": {
+        "max_new_tokens": 96,
+        "do_sample": false,
+        "decoding": "greedy"
+      }
+    }
+  ],
+  "references_supplied": null,
+  "metrics": [],
+  "baselines": [],
+  "verdict": "not-measurable",
+  "reason": "open-ended generated text has no intrinsic correctness signal and this repository ships no metric helper; reading the answers against what you can see is a sanity check on one sample, not a measurement",
+  "needs": "labelled data matched to the use and the caller's own scoring code over enough items to state a dispersion: question-answer pairs with reference answers for VQA accuracy, reference captions for a caption metric such as CIDEr, or document pages with gold answers for document-QA exact match. This repository ships no metric helper, so there is nothing to compute here.",
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "model_revision": "a7da5b986cb59b408707209984f360a5f4ad7e47"
+}

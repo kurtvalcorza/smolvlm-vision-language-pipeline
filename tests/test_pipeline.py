@@ -147,17 +147,23 @@ def test_stage_missing_files_refuses_foreign_manifest(tmp_path):
         stage_missing_files(tmp_path, allow_download=True, downloader=lambda *_: None)
 
 
-def test_from_pretrained_refuses_without_snapshot_or_download(tmp_path):
+def test_from_pretrained_refuses_without_snapshot_or_download(tmp_path, forbid_model_imports):
     with pytest.raises(FileNotFoundError, match="allow_download=False"):
         SmolVLMPipeline.from_pretrained(weights_dir=tmp_path, allow_download=False)
 
 
-def test_from_pretrained_refuses_tampered_snapshot_before_loading(tmp_path):
+def test_from_pretrained_refuses_tampered_snapshot_before_loading(tmp_path, forbid_model_imports):
     manifest_path = _write_snapshot(tmp_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["files"][0]["sha256"] = "0" * 64
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="sha256"):
+        SmolVLMPipeline.from_pretrained(device="cpu", weights_dir=tmp_path)
+
+
+def test_from_pretrained_valid_snapshot_reaches_model_import(tmp_path, forbid_model_imports):
+    _write_snapshot(tmp_path)
+    with pytest.raises(AssertionError, match="model dependency imported before rejection: torch"):
         SmolVLMPipeline.from_pretrained(device="cpu", weights_dir=tmp_path)
 
 
