@@ -3,6 +3,8 @@ license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: image-text-to-text
 base_model: HuggingFaceTB/SmolVLM-500M-Instruct
+date_published: "2025-01-20"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/HuggingFaceTB/SmolVLM-500M-Instruct)"
 ---
 
 # SmolVLM-500M-Instruct (DIMER package v0.1.0) — Vision-Language Model (Image + Text Chat Generation)
@@ -11,7 +13,6 @@ base_model: HuggingFaceTB/SmolVLM-500M-Instruct
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-huggingface%2Fsmollm-181717?style=flat&logo=github&logoColor=white)](https://github.com/huggingface/smollm)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2504.05299-b31b1b.svg)](https://arxiv.org/abs/2504.05299)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Pipeline](https://img.shields.io/badge/Pipeline-smolvlm--vision--language--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -28,7 +29,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 `HuggingFaceTB/SmolVLM-500M-Instruct` is the 500 M-parameter instruction-tuned member of Hugging Face's SmolVLM family (Marafioti et al., arXiv:2504.05299), pinned here to revision `a7da5b986cb59b408707209984f360a5f4ad7e47`. It is an Idefics3-architecture model (`config.json` `model_type: idefics3`): a 93 M-parameter SigLIP-derived vision encoder (12 layers, hidden 768, 512-px input, 16-px patches) whose patch features are pixel-shuffled with `scale_factor` 4 into 64 visual tokens per 512×512 tile and projected into a 32-layer, 960-d Llama-style decoder with a 49280-token vocabulary and 8192-position context — the text decoder is SmolLM2-360M-Instruct, which DIMER already hosts as its own profile (upstream README `base_model`). At inference the processor resizes an image to a longest edge of 2048 px, splits it into 512-px tiles plus a global view, interleaves `<image>` tokens with the chat-templated prompt, and the decoder generates an answer token by token; adaptation is by prompt only — no training or in-context examples happen in this repository. What this repository adds is packaging: `SmolVLMPipeline` in `src/smolvlm_vision_language_pipeline/pipeline.py`, digest verification of the local snapshot (`verify_snapshot`, `stage_missing_files`), input validation, a single-image single-turn chat contract with the generation settings echoed in every result, and a CPU smoke run; it exposes no metric because none can be computed without a labelled VQA set.
 
