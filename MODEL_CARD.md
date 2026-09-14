@@ -3,6 +3,8 @@ license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: image-text-to-text
 base_model: HuggingFaceTB/SmolVLM-500M-Instruct
+date_published: "2025-01-20"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/HuggingFaceTB/SmolVLM-500M-Instruct)"
 ---
 
 # SmolVLM-500M-Instruct (DIMER package v0.1.0) — Vision-Language Model (Image + Text Chat Generation)
@@ -11,7 +13,6 @@ base_model: HuggingFaceTB/SmolVLM-500M-Instruct
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-huggingface%2Fsmollm-181717?style=flat&logo=github&logoColor=white)](https://github.com/huggingface/smollm)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2504.05299-b31b1b.svg)](https://arxiv.org/abs/2504.05299)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Pipeline](https://img.shields.io/badge/Pipeline-smolvlm--vision--language--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -28,7 +29,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 `HuggingFaceTB/SmolVLM-500M-Instruct` is the 500 M-parameter instruction-tuned member of Hugging Face's SmolVLM family (Marafioti et al., arXiv:2504.05299), pinned here to revision `a7da5b986cb59b408707209984f360a5f4ad7e47`. It is an Idefics3-architecture model (`config.json` `model_type: idefics3`): a 93 M-parameter SigLIP-derived vision encoder (12 layers, hidden 768, 512-px input, 16-px patches) whose patch features are pixel-shuffled with `scale_factor` 4 into 64 visual tokens per 512×512 tile and projected into a 32-layer, 960-d Llama-style decoder with a 49280-token vocabulary and 8192-position context — the text decoder is SmolLM2-360M-Instruct, which DIMER already hosts as its own profile (upstream README `base_model`). At inference the processor resizes an image to a longest edge of 2048 px, splits it into 512-px tiles plus a global view, interleaves `<image>` tokens with the chat-templated prompt, and the decoder generates an answer token by token; adaptation is by prompt only — no training or in-context examples happen in this repository. What this repository adds is packaging: `SmolVLMPipeline` in `src/smolvlm_vision_language_pipeline/pipeline.py`, digest verification of the local snapshot (`verify_snapshot`, `stage_missing_files`), input validation, a single-image single-turn chat contract with the generation settings echoed in every result, and a CPU smoke run; it exposes no metric because none can be computed without a labelled VQA set.
 
@@ -60,7 +61,7 @@ The Cauldron and Docmatix are curated from public datasets — photographs, scre
 
 ###### Environment
 
-Operating environment: Python 3.12 with `torch==2.14.0`, `transformers==4.57.6`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is optional: `from_pretrained` picks `cuda:0` when available with bfloat16, else CPU with float32; the DIMER build environment is CPU-only (`CUDA_VISIBLE_DEVICES=-1`). On this repository's smoke run (Windows venv, CPU, float32, one 256×256 synthetic white image with a centred red square, prompt "Describe the image.") loading the verified snapshot took 5.71 s and generating 128 tokens took 17.40 s (23.11 s total); a second identical call returned byte-identical text. The CUDA/bfloat16 path is not executed in this repository. Data environment: inputs are assumed to be natural photographs, screenshots or document images resembling The Cauldron/Docmatix mixture, upright, with the subject legible at 512-px tiles; medical, satellite, line-art or heavily rotated inputs fall outside that assumption and degrade in ways the pipeline does not measure.
+Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `transformers==4.57.6`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is optional: `from_pretrained` picks `cuda:0` when available with bfloat16, else CPU with float32; the DIMER build environment is CPU-only (`CUDA_VISIBLE_DEVICES=-1`). On this repository's smoke run (Windows venv, CPU, float32, one 256×256 synthetic white image with a centred red square, prompt "Describe the image.") loading the verified snapshot took 5.71 s and generating 128 tokens took 17.40 s (23.11 s total); a second identical call returned byte-identical text. The CUDA/bfloat16 path is not executed in this repository. Data environment: inputs are assumed to be natural photographs, screenshots or document images resembling The Cauldron/Docmatix mixture, upright, with the subject legible at 512-px tiles; medical, satellite, line-art or heavily rotated inputs fall outside that assumption and degrade in ways the pipeline does not measure.
 
 #### Metrics
 
@@ -117,7 +118,7 @@ The pipeline must not be used for surveillance, biometric or demographic profili
 
 ## Runtime
 
-- Pins: `torch==2.14.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12. The build venv carries `torch 2.14.0+cu130`.
+- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12. The build venv carries `torch 2.14.0+cu130`.
 - Precision: float32 on CPU (the measured path); bfloat16 on CUDA (not executed here). Preprocessing per `preprocessor_config.json`: longest edge 2048, 512-px tiles, bilinear, mean/std 0.5; 64 visual tokens per tile (`processor_config.json` `image_seq_len`).
 - Measured (Windows venv `dimer-next16`, CPU, `CUDA_VISIBLE_DEVICES=-1`, `HF_HUB_OFFLINE=1`, 2026-09-12): device `cpu`, dtype `float32`, source `local-snapshot`; load 5.71 s, generate 17.40 s for 128 new tokens (`truncated: true`), total 23.11 s; output began "The image depicts a simple, two-dimensional geometric shape. The shape is a square … colored in a bright red hue … against the white background"; a repeat call returned identical text; exit 0.
 - Tests: `pytest -q -o addopts= tests` — 15 passed, offline, no weights required; `ruff check src tests` clean.
