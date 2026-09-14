@@ -61,7 +61,7 @@ The Cauldron and Docmatix are curated from public datasets — photographs, scre
 
 ###### Environment
 
-Operating environment: Python 3.12 with `torch==2.14.0`, `transformers==4.57.6`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is optional: `from_pretrained` picks `cuda:0` when available with bfloat16, else CPU with float32; the DIMER build environment is CPU-only (`CUDA_VISIBLE_DEVICES=-1`). On this repository's smoke run (Windows venv, CPU, float32, one 256×256 synthetic white image with a centred red square, prompt "Describe the image.") loading the verified snapshot took 5.71 s and generating 128 tokens took 17.40 s (23.11 s total); a second identical call returned byte-identical text. The CUDA/bfloat16 path is not executed in this repository. Data environment: inputs are assumed to be natural photographs, screenshots or document images resembling The Cauldron/Docmatix mixture, upright, with the subject legible at 512-px tiles; medical, satellite, line-art or heavily rotated inputs fall outside that assumption and degrade in ways the pipeline does not measure.
+Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `transformers==4.57.6`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is optional: `from_pretrained` picks `cuda:0` when available with bfloat16, else CPU with float32; the DIMER build environment is CPU-only (`CUDA_VISIBLE_DEVICES=-1`). On this repository's smoke run (Windows venv, CPU, float32, one 256×256 synthetic white image with a centred red square, prompt "Describe the image.") loading the verified snapshot took 5.71 s and generating 128 tokens took 17.40 s (23.11 s total); a second identical call returned byte-identical text. The CUDA/bfloat16 path is not executed in this repository. Data environment: inputs are assumed to be natural photographs, screenshots or document images resembling The Cauldron/Docmatix mixture, upright, with the subject legible at 512-px tiles; medical, satellite, line-art or heavily rotated inputs fall outside that assumption and degrade in ways the pipeline does not measure.
 
 #### Metrics
 
@@ -118,7 +118,7 @@ The pipeline must not be used for surveillance, biometric or demographic profili
 
 ## Runtime
 
-- Pins: `torch==2.14.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12. The build venv carries `torch 2.14.0+cu130`.
+- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `transformers==4.57.6`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12. The build venv carries `torch 2.14.0+cu130`.
 - Precision: float32 on CPU (the measured path); bfloat16 on CUDA (not executed here). Preprocessing per `preprocessor_config.json`: longest edge 2048, 512-px tiles, bilinear, mean/std 0.5; 64 visual tokens per tile (`processor_config.json` `image_seq_len`).
 - Measured (Windows venv `dimer-next16`, CPU, `CUDA_VISIBLE_DEVICES=-1`, `HF_HUB_OFFLINE=1`, 2026-09-12): device `cpu`, dtype `float32`, source `local-snapshot`; load 5.71 s, generate 17.40 s for 128 new tokens (`truncated: true`), total 23.11 s; output began "The image depicts a simple, two-dimensional geometric shape. The shape is a square … colored in a bright red hue … against the white background"; a repeat call returned identical text; exit 0.
 - Tests: `pytest -q -o addopts= tests` — 15 passed, offline, no weights required; `ruff check src tests` clean.
