@@ -7,7 +7,7 @@ date_published: "2025-01-20"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/HuggingFaceTB/SmolVLM-500M-Instruct)"
 ---
 
-# SmolVLM-500M-Instruct (DIMER package v0.1.0) — Vision-Language Model (Image + Text Chat Generation)
+# SmolVLM-500M-Instruct — Vision-Language Model (Image + Text Chat Generation)
 
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-HuggingFaceTB%2FSmolVLM--500M--Instruct-ffcc4d?style=flat)](https://huggingface.co/HuggingFaceTB/SmolVLM-500M-Instruct)
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-huggingface%2Fsmollm-181717?style=flat&logo=github&logoColor=white)](https://github.com/huggingface/smollm)
