@@ -2,6 +2,7 @@
 license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: image-text-to-text
+task: "Others - Vision-Language Generation"
 base_model: HuggingFaceTB/SmolVLM-500M-Instruct
 date_published: "2025-01-20"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/HuggingFaceTB/SmolVLM-500M-Instruct)"
