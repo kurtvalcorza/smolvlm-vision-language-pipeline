@@ -78,7 +78,7 @@ Before changing the registry status from `Candidate` to `Release-grade`:
    the manifest itself, stages the missing files from the Hub and reads the pinned row groups over range requests, so
    neither directory may be seeded);
 3. run the notebook top-to-bottom without editing implementation cells (form parameters at their defaults:
-   `USE_BYOD = False`, `SPLIT_SEED = 42`, `LINE_MAX_NEW_TOKENS = 128`, `EPOCHS = 6`, `LEARNING_RATE = 5e-5`,
+   `USE_BYOD = False`, `SPLIT_SEED = 42`, `LINE_MAX_NEW_TOKENS = 128`, `EPOCHS = 8`, `LEARNING_RATE = 1e-4`,
    `BATCH_SIZE = 8`);
 4. verify that Section 1 reports `NOTEBOOK_SOURCE.repository_revision` equal to the revision recorded in
    `metadata.dimer.generated_from` and that the installed core package versions equal the inline `PINS`
@@ -108,8 +108,8 @@ Before changing the registry status from `Candidate` to `Release-grade`:
      naming both shapes — an observation, not an assertion);
    - Section 6: the empty baseline (CER 1.0 exactly), the constant-transcript baseline (≈ 0.94) and the frozen model's
      test rates (≈ @P:FROZEN_CER@ CER / @P:FROZEN_WER@ WER in the Tesla T4 build record — @P:FROZEN_READ@) with four hypotheses printed under their references;
-   - Section 7: `pipe.adapt` printing epoch 0 as the frozen model, 39,330,240 trainable of 507,482,304 parameters,
-     `first_trainable_layer` 28, and a six-epoch history with the validation CER falling (build record:
+   - Section 7: `pipe.adapt` printing epoch 0 as the frozen model, 78,659,520 trainable of 507,482,304 parameters,
+     `first_trainable_layer` 24, and an eight-epoch history with the validation CER falling (build record:
      @P:VAL_CURVE@, `best_epoch` @P:BEST_EPOCH@);
    - Section 8: `pipe.evaluate` on the validation and test splits with the four-way comparison, the hypothesis
      lengths and `outputs/…_evaluation_report.json` written (the cell asserts the adapted test CER is below the frozen
@@ -118,7 +118,7 @@ Before changing the registry status from `Candidate` to `Release-grade`:
    - Section 9: six example panels under `outputs/…_examples/`; the two prompts asked of the drawing again by the
      adapted model with `outputs/…_drawing_adapted.json` (build record: @P:DRAWING_AFTER@ — a recorded observation,
      not an assertion); `pipe.save_artifact` writing `outputs/…_adapter/{adapter.safetensors,manifest.json}` (37
-     tensors, about 157 MB) and `SmolVLMPipeline.from_artifact` reloading it with 8/8 identical transcripts on
+     tensors, about 315 MB) and `SmolVLMPipeline.from_artifact` reloading it with 8/8 identical transcripts on
      eight test lines (the cell asserts it); `outputs/…_result.json` written with `NOTEBOOK_SOURCE`, the model
      identity and licence, the snapshot block (`weight_file`, `weight_format`, `weight_sha256`), the `corpus` block,
      the inference-contract records before and after adaptation, the comparison, the artifact digest, the reload
@@ -148,7 +148,7 @@ stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-| 2026-09-20 | package API at `@P:PROBE_SHA@` (pre-flight, not the notebook blob) | Kaggle Tesla T4 script kernel (`kurtvalcorza/dimer-probe-smolvlm-e2e` v1; `torch 2.14.0+cu130`, `transformers 4.57.6`, Python 3.12, `cuda:0`, float32), branch cloned, pins installed, snapshot staged from the Hub | `tests/test_model_backed.py` (@P:MB_RESULT@) and the recipe probe: the eight pinned row groups read over range requests (800 lines, digest match), empty and constant baselines, frozen transcription instruction on the 140 test lines, `adapt(epochs=6, lr=5e-5, batch_size=8)` with validation-CER selection, adapted evaluation, artifact round trip | @P:PROBE_WALL@ | @P:PROBE_OUTCOME@ |
+| 2026-09-20 | package API at `@P:PROBE_SHA@` (pre-flight, not the notebook blob) | Kaggle Tesla T4 script kernel (`kurtvalcorza/dimer-probe-smolvlm-e2e` v1; `torch 2.14.0+cu130`, `transformers 4.57.6`, Python 3.12, `cuda:0`, float32), branch cloned, pins installed, snapshot staged from the Hub | `tests/test_model_backed.py` (@P:MB_RESULT@) and the recipe probe: the eight pinned row groups read over range requests (800 lines, digest match), empty and constant baselines, frozen transcription instruction on the 140 test lines, `adapt(epochs=8, lr=1e-4, batch_size=8)` with validation-CER selection, adapted evaluation, artifact round trip | @P:PROBE_WALL@ | @P:PROBE_OUTCOME@ |
 | 2026-09-13 | `fe478b69e92bcc144cb2a38e7f12e5bbe65a1873` / `8e97c78fc79e38124910c3d40850874ac5fb0194` (`TASK-INFERENCE`, superseded) | Colab CLI → fresh Python 3.12.3 venv/interpreter; Tesla T4, 15,360 MiB | Unchanged default sample, no repository checkout, empty per-model cache and weights | 194.3 s / 198.3 s | PASS — 8/8 cells; [retained run](verification/2026-09-13/README.md); not evidence for the `E2E` blob |
 
 ## Current status

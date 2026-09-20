@@ -75,7 +75,7 @@ def test_model_facts_batched_recognition_and_frozen_evaluation(pipe, records):
 
 def test_one_epoch_adaptation_and_artifact_round_trip(pipe, records, tmp_path):
     result = pipe.adapt(records[:12], records[12:], epochs=1, batch_size=4, max_new_tokens=64)
-    assert result["n_trainable"] == ADAPTER_PARAMETERS and result["n_total"] == PARAMETER_COUNT and result["first_trainable_layer"] == 28 and result["prompt"] == TRANSCRIBE_PROMPT
+    assert result["n_trainable"] == ADAPTER_PARAMETERS and result["n_total"] == PARAMETER_COUNT and result["first_trainable_layer"] == 24 and result["prompt"] == TRANSCRIBE_PROMPT
     assert result["history"][0]["note"] == "frozen model" and result["history"][1]["train_loss"] > 0.0
     assert set(result["history"][1]["val"]) == {"cer", "wer", "cer_macro", "exact_match", "n"} and result["best_epoch"] in (0, 1)
     assert all(n.startswith(_TRAINABLE_PREFIXES) for n in result["trainable_names"])
@@ -138,7 +138,7 @@ def test_load_artifact_refuses_a_tensor_set_that_differs_from_the_recorded_confi
     vision = tmp_path / "vision"
     shutil.copytree(artifact, vision)
     (vision / "manifest.json").write_text(json.dumps({**manifest, "tensors": [*manifest["tensors"], "model.vision_model.encoder.layers.0.x"]}))
-    with pytest.raises(ValueError, match="last 4 decoder layers"):
+    with pytest.raises(ValueError, match="last 8 decoder layers"):
         SmolVLMPipeline.from_artifact(vision, weights_dir=DEFAULT_WEIGHTS_DIR)
 
 

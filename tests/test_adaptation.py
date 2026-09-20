@@ -332,8 +332,8 @@ def test_check_artifact_manifest_accepts_a_consistent_manifest_and_refuses_each_
         pl._check_artifact_manifest(bad, tmp_path, "base-digest")
     with pytest.raises(ValueError, match="exactly adapter.safetensors"):
         pl._check_artifact_manifest(_manifest(tmp_path, files=[]), tmp_path, "base-digest")
-    for name in ("model.text_model.layers.27.mlp.down_proj.weight", "model.vision_model.encoder.layers.0.x", "model.text_model.embed_tokens.weight", "model.connector.modality_projection.x", "lm_head.weight"):
-        with pytest.raises(ValueError, match="last 4 decoder layers"):
+    for name in ("model.text_model.layers.23.mlp.down_proj.weight", "model.vision_model.encoder.layers.0.x", "model.text_model.embed_tokens.weight", "model.connector.modality_projection.x", "lm_head.weight"):
+        with pytest.raises(ValueError, match="last 8 decoder layers"):
             pl._check_artifact_manifest(_manifest(tmp_path, tensors=[name]), tmp_path, "base-digest")
     with pytest.raises(ValueError, match="adapter.prompt"):
         pl._check_artifact_manifest(_manifest(tmp_path, adapter={"best_epoch": 1}), tmp_path, "base-digest")
@@ -346,11 +346,11 @@ def test_trainable_names_selects_the_last_layers_and_the_norm():
 
     class _Model:
         def named_parameters(self):
-            names = ["model.vision_model.encoder.layers.0.x", "model.connector.modality_projection.x", "model.text_model.embed_tokens.weight", "model.text_model.layers.0.x", "model.text_model.layers.27.x", "model.text_model.layers.28.x", "model.text_model.layers.31.mlp.up_proj.weight", "model.text_model.norm.weight", "lm_head.weight"]
+            names = ["model.vision_model.encoder.layers.0.x", "model.connector.modality_projection.x", "model.text_model.embed_tokens.weight", "model.text_model.layers.0.x", "model.text_model.layers.23.x", "model.text_model.layers.24.x", "model.text_model.layers.31.mlp.up_proj.weight", "model.text_model.norm.weight", "lm_head.weight"]
             return [(n, _Param()) for n in names]
 
-    assert pl._trainable_names(_Model()) == ["model.text_model.layers.28.x", "model.text_model.layers.31.mlp.up_proj.weight", "model.text_model.norm.weight"]
-    assert pl._TRAINABLE_FIRST_LAYER == 28 and len(pl._TRAINABLE_PREFIXES) == 5
+    assert pl._trainable_names(_Model()) == ["model.text_model.layers.24.x", "model.text_model.layers.31.mlp.up_proj.weight", "model.text_model.norm.weight"]
+    assert pl._TRAINABLE_FIRST_LAYER == 24 and len(pl._TRAINABLE_PREFIXES) == 9
 
 
 def test_manifest_json_round_trip(tmp_path):

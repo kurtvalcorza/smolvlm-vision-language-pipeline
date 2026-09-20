@@ -48,8 +48,8 @@ END_OF_UTTERANCE = "<end_of_utterance>"  # the assistant turn's terminator in th
 # Model facts (measured on the pinned snapshot; tests pin them).
 PARAMETER_COUNT = 507_482_304
 DECODER_LAYERS = 32
-TRAINABLE_LAYERS = 4  # the last text-decoder layers + the final norm are the adapter
-ADAPTER_PARAMETERS = 39_330_240
+TRAINABLE_LAYERS = 8  # the last text-decoder layers + the final norm are the adapter
+ADAPTER_PARAMETERS = 78_659_520
 # Adaptation contract.
 ARTIFACT_FORMAT = f"org.valcorza.{MODEL_KEY}.adapter.v1"
 ARTIFACT_VERSION = "1.0"
@@ -556,8 +556,8 @@ class SmolVLMPipeline:
         val: Sequence[Mapping[str, Any]] | None,
         *,
         prompt: str = TRANSCRIBE_PROMPT,
-        epochs: int = 6,
-        lr: float = 5e-5,
+        epochs: int = 8,
+        lr: float = 1e-4,
         batch_size: int = 8,
         seed: int = 0,
         max_new_tokens: int = DEFAULT_LINE_MAX_NEW_TOKENS,

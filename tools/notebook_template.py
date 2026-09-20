@@ -9,7 +9,7 @@ snapshot is digest-verified and loaded, 800 MIT-licensed Belfort handwritten lin
 fetched as eight digest-pinned parquet row groups over HTTPS range requests, the records are validated and split by
 line, two prompts are asked of a synthetic drawing through the inference contract, the frozen model's transcription
 instruction is scored over the held-out lines (character and word error rates) beside an empty-string and a
-constant-transcript baseline, a bounded fine-tuning of the last four decoder layers runs on cached prefix hidden
+constant-transcript baseline, a bounded fine-tuning of the last eight decoder layers runs on cached prefix hidden
 states with validation-CER epoch selection, the held-out split is scored again, six held-out lines and the two
 drawing prompts are re-run with the adapted model, and the adapter is exported and reloaded.
 """
@@ -59,12 +59,12 @@ TEMPLATE = {
         "800 line records and splits them by line into 600 / 60 / 140, asks two prompts of a synthetic drawing through the "
         "inference contract with a combined input manifest and a rejection probe, scores the frozen model's transcription "
         "instruction over the 140 held-out lines (character and word error rates) beside an empty-string and a "
-        "constant-transcript baseline, runs a bounded fine-tuning of the last four decoder layers on cached prefix hidden "
+        "constant-transcript baseline, runs a bounded fine-tuning of the last eight decoder layers on cached prefix hidden "
         "states with validation-CER epoch selection, scores the held-out lines again, re-runs six held-out lines and the two "
         "drawing prompts with the adapted model, exports the adapter as safetensors with a manifest, and reloads that "
         "artifact into a fresh pipeline to verify transcript parity. The default path needs no repository clone, no DIMER "
         "worker or service, no credential, no upload dialog and no configuration edit (NOTEBOOK_SPEC 2.0 §5). On a Tesla T4 "
-        "the default path took about @P:T4_TOTAL_MIN@ minutes of cell time (six epochs @P:T4_ADAPT_S@ s, frozen scoring of "
+        "the default path took about @P:T4_TOTAL_MIN@ minutes of cell time (eight epochs @P:T4_ADAPT_S@ s, frozen scoring of "
         "140 lines @P:T4_FROZEN_S@ s); a CUDA runtime is used automatically when present, and **a CPU runtime is not "
         "practical for the default path** (greedy decoding of some 800 lines plus 600 cached forwards of a 507M-parameter "
         "model)."
@@ -88,7 +88,7 @@ TEMPLATE = {
         "— the Belfort-line dataset — far outside the model's instruction-tuning distribution, and on them the frozen model "
         "reads a word here and there and answers in English about the rest: a character error rate of **@P:FROZEN_CER@** on "
         "the 140 held-out lines (the build record's Tesla T4 figure). So the honest question is narrow: does a bounded "
-        "fine-tuning of the last four decoder layers on 600 transcribed lines move the held-out **CER** and **WER** on a "
+        "fine-tuning of the last eight decoder layers on 600 transcribed lines move the held-out **CER** and **WER** on a "
         "line-disjoint test split past two **non-adapted baselines** and the frozen model — and what does it do to the other "
         "prompts the same decoder answers? The two sibling rows that adapted GOT-OCR 2.0 and Florence-2 on the same split "
         "squash a line into a square; this model's tiling keeps the line's aspect ratio, which is the comparison the fleet "
@@ -113,14 +113,14 @@ TEMPLATE = {
     ),
     "exclusions": (
         "multi-image and multi-turn conversations (`MAX_IMAGES = 1`, one user turn), video, sampling-based decoding in the "
-        "corpus stages, fine-tuning of the vision encoder, the connector, the embeddings, the output head or the first 28 "
+        "corpus stages, fine-tuning of the vision encoder, the connector, the embeddings, the output head or the first 24 "
         "decoder layers, fine-tuning of any instruction but the transcription one, a metric for open-ended answers "
         "(captions and free-form VQA stay `not-measurable`), evaluation on an OCR or VQA benchmark proper (only one seeded "
         "800-line sample is scored here), and any claim that French cursive minutes stand in for your documents. The "
         "repository exposes none of these."
     ),
     "prerequisites": [
-        "- **Runtime:** a fresh supported runtime with a CUDA GPU (Google Colab or Kaggle GPU, Python 3.12). The default path uses CUDA automatically when present. Generation is batched for the corpus stages — the prompt length varies with the image's tile count, so batches are left-padded — and the build record measured @P:T4_FROZEN_S@ s to score 140 lines and @P:T4_ADAPT_S@ s for the six epochs (caching the prefix hidden states for 600 lines took @P:T4_CACHE_S@ s) on a Tesla T4, about @P:T4_TOTAL_MIN@ minutes of cell time for the whole path; a CPU runtime would take hours. The pinned `torch==2.14.0` install and the 1.02 GB checkpoint are the large downloads of the run; the row groups are about 44 MB.",
+        "- **Runtime:** a fresh supported runtime with a CUDA GPU (Google Colab or Kaggle GPU, Python 3.12). The default path uses CUDA automatically when present. Generation is batched for the corpus stages — the prompt length varies with the image's tile count, so batches are left-padded — and the build record measured @P:T4_FROZEN_S@ s to score 140 lines and @P:T4_ADAPT_S@ s for the eight epochs (caching the prefix hidden states for 600 lines took @P:T4_CACHE_S@ s) on a Tesla T4, about @P:T4_TOTAL_MIN@ minutes of cell time for the whole path; a CPU runtime would take hours. The pinned `torch==2.14.0` install and the 1.02 GB checkpoint are the large downloads of the run; the row groups are about 44 MB.",
         "- **Knowledge:** basic Python and PIL; what a chat template, a user turn and greedy decoding are; what character and word error rate measure and why they are not capped at 1; why a self-drawn image is a plumbing check while a held-out split of one labelled set is a measurement of that set only.",
         "- **Data contract:** records are `{id, image, text}` — `image` a PIL image (or a file decodable by Pillow) with sides within 1..16,384 px and at most 4096² pixels, `text` its transcript (1..512 characters after whitespace runs are collapsed; case and punctuation kept). Ids match `[A-Za-z0-9_.:-]{1,64}` and are unique; a dataset needs 8..5,000 records; splitting de-duplicates by decoded pixels so no image lands in two splits. BYOD accepts one zip (or directory) of images plus a `transcripts.csv` in the layout named above.",
         "- **Validation is structural, not semantic:** every image is decoded and every transcript checked for length, but nothing checks that a transcript says what its image shows — a mislabelled set is fine-tuned on without complaint.",
@@ -289,12 +289,12 @@ TEMPLATE = {
         {
             "md": (
                 "## 7. Bounded fine-tuning of the last decoder layers\n\n"
-                "`pipe.adapt` trains only the last four of the 32 SmolLM2 decoder layers and the final norm — 39,330,240 of "
+                "`pipe.adapt` trains only the last eight of the 32 SmolLM2 decoder layers and the final norm — 78,659,520 of "
                 "507,482,304 parameters — while the SigLIP vision encoder, the connector, the embeddings, the output head and "
-                "the first 28 decoder layers stay frozen. Each training line is the chat-templated user turn (the tiles' visual "
+                "the first 24 decoder layers stay frozen. Each training line is the chat-templated user turn (the tiles' visual "
                 "tokens and the instruction) followed by the assistant turn: the transcript's tokens and the end-of-utterance "
                 "token; the loss is the **causal language-model cross-entropy** over the assistant turn with the user turn "
-                "masked out — the checkpoint's own instruction-tuning objective. Because everything before layer 28 is frozen, "
+                "masked out — the checkpoint's own instruction-tuning objective. Because everything before layer 24 is frozen, "
                 "its output for every training line is computed once under no gradient and cached (the **frozen-prefix "
                 "cache**), and each step runs only the four trainable layers, the norm and the output head on those cached "
                 "states — the loss equals the full model's loss exactly, at a fraction of the cost. AdamW without weight decay "
@@ -307,8 +307,8 @@ TEMPLATE = {
                 "card compares the three."
             ),
             "code": (
-                "EPOCHS = 6  # @param {{type:\"integer\"}}\n"
-                "LEARNING_RATE = 5e-5  # @param {{type:\"number\"}}\n"
+                "EPOCHS = 8  # @param {{type:\"integer\"}}\n"
+                "LEARNING_RATE = 1e-4  # @param {{type:\"number\"}}\n"
                 "BATCH_SIZE = 8  # @param {{type:\"integer\"}}\n\n\n"
                 "def report(entry):\n"
                 "    row = {{'epoch': entry['epoch'], 'train_loss': None if entry['train_loss'] is None else round(entry['train_loss'], 4)}}\n"
@@ -377,12 +377,12 @@ TEMPLATE = {
                 "prompts by the adapted model — the decoder that was tuned answers every prompt, so this is a small look at what "
                 "the adaptation did *outside* its instruction and its corpus: the build record measured @P:DRAWING_AFTER@ — one "
                 "drawing of evidence, not a measurement.\n\n"
-                "`pipe.save_artifact` writes the trained tensors — the four decoder layers and the norm, about 157 MB in "
+                "`pipe.save_artifact` writes the trained tensors — the eight decoder layers and the norm, about 315 MB in "
                 "float32 — as `adapter.safetensors`, with a `manifest.json` recording the artifact format, the base model id and "
                 "revision, the digest of the base `model.safetensors`, the tensor names, the file size and SHA-256, the "
                 "instruction, the training configuration and the epoch history (OUT8). `SmolVLMPipeline.from_artifact` "
                 "re-verifies the base snapshot, checks the artifact manifest, its digest and its exact tensor set **before** "
-                "deserialising, refuses any tensor outside the last four decoder layers and the norm, and overlays the tensors "
+                "deserialising, refuses any tensor outside the last eight decoder layers and the norm, and overlays the tensors "
                 "onto a freshly loaded base — a new object from files, not the in-memory model (VER2). The cell asserts "
                 "identical transcripts on eight test lines (VER4)."
             ),
@@ -441,9 +441,9 @@ TEMPLATE = {
         "## Interpretation and limits\n\n"
         "An instruction-tuned vision-language model answers in the register it was tuned on, and asked to transcribe "
         "nineteenth-century cursive French it reads a word or two and describes the rest in English: the frozen model scores "
-        "a character error rate of @P:FROZEN_CER@ on the Belfort lines. A bounded fine-tuning of the last four decoder layers "
+        "a character error rate of @P:FROZEN_CER@ on the Belfort lines. A bounded fine-tuning of the last eight decoder layers "
         "on 600 transcribed lines moves it to @P:ADAPTED_CER@ CER and @P:ADAPTED_WER@ WER in the build record "
-        "(@P:ADAPTED_EXACT@ of the held-out lines exact), with a 157 MB adapter that reloads line-for-line. That is the claim: "
+        "(@P:ADAPTED_EXACT@ of the held-out lines exact), with a 315 MB adapter that reloads line-for-line. That is the claim: "
         "the adaptation contract works end to end on one instruction of a chat model with a real labelled set, and the numbers "
         "it produces are read as micro and macro rates, against two non-adapted baselines and the frozen model, with the "
         "hypothesis length beside them rather than in isolation. Read against the two sibling rows on the same split — "
@@ -468,7 +468,7 @@ TEMPLATE = {
         "reachable. It does **not** establish benchmark superiority, transcription quality on any other hand, language or "
         "document family, caption or question-answering quality after adaptation, or production fitness.\n\n"
         "**Optional experiments (they do not affect the default path):** raise `EPOCHS` and watch the validation CER pick the "
-        "epoch; set `LEARNING_RATE` to `1e-4` and read a faster, noisier validation curve; lower `LINE_MAX_NEW_TOKENS` to `64` "
+        "epoch; set `LEARNING_RATE` to `2e-4` and read a faster, noisier validation curve (the build sweep found lr 5e-5 and four layers leave the adapted CER above 1.0); lower `LINE_MAX_NEW_TOKENS` to `64` "
         "and read how the truncation count changes; change `TRANSCRIBE_PROMPT`'s wording in the carried module and rerun from "
         "Section 6 to see how much the frozen model's behaviour depends on the phrasing; or bring your own transcribed lines "
         "through BYOD and read the two baselines before the adapted number.\n\n"
