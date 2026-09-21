@@ -1,7 +1,7 @@
 [project]
 name = "smolvlm-vision-language-pipeline"
 version = "0.1.0"
-description = "DIMER inference pipeline for HuggingFaceTB/SmolVLM-500M-Instruct image + text chat generation"
+description = "DIMER pipeline for HuggingFaceTB/SmolVLM-500M-Instruct image + text chat generation"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = { file = "LICENSE" }
@@ -15,6 +15,7 @@ dependencies = [
   "safetensors==0.8.0",
   "numpy==2.5.3",
   "pillow==11.3.0",
+  "pyarrow==25.0.1",
 ]
 [project.optional-dependencies]
 dev = ["pytest==8.4.2", "ruff==0.16.6"]
