@@ -373,6 +373,9 @@ class SmolVLMPipeline:
     _processor: Any = field(default=None, repr=False)
     weight_sha256: str | None = None
     adapter: dict[str, Any] | None = None
+    # Pinned-base values of the trainable tensors, kept the first time adapt() or load_artifact() is about to change
+    # them: every adaptation starts from the verified base, never from a previous run (review finding SVL-M2).
+    _base_state: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
     def from_pretrained(
@@ -570,8 +573,9 @@ class SmolVLMPipeline:
         no gradient and its output hidden states are cached, so each step runs only the trainable tail; the loss equals
         the full model's loss exactly. AdamW (no weight decay), gradient clipping at `GRAD_CLIP`, seeded shuffling, no
         scheduler, no augmentation. Epoch 0 records the frozen model's validation metrics; the epoch with the lowest
-        validation CER is kept (the final one without a validation split). On any exception the frozen weights are
-        restored."""
+        validation CER is kept (the final one without a validation split). Every call starts from the pinned base:
+        tensors an earlier adapt() or load_artifact() changed are restored first. On any exception the weights are put
+        back as they were before the call."""
         model, processor = self._require_model()  # refuse before importing torch
         import torch
 
@@ -595,8 +599,13 @@ class SmolVLMPipeline:
         end_id = tokenizer.convert_tokens_to_ids(END_OF_UTTERANCE)
         pad_id = tokenizer.pad_token_id
         chat_text = processor.apply_chat_template(build_messages(prompt), add_generation_prompt=True)
-        frozen_state = {k: v.detach().clone() for k, v in model.state_dict().items() if k in name_set}
+        # Every call starts from the pinned base (epoch 0 is the frozen model whatever ran before); a failed call puts
+        # the weights back as they were before it.
+        previous_state = {k: v.detach().clone() for k, v in model.state_dict().items() if k in name_set}
         previous_adapter = self.adapter
+        self._remember_base(model, names)
+        restored = self.restore_base()
+        frozen_state = {k: v.detach().clone() for k, v in model.state_dict().items() if k in name_set}
         cudnn_flags = (torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
         torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark = True, False  # repeatable on one device
         history: list[dict[str, Any]] = []
@@ -704,7 +713,7 @@ class SmolVLMPipeline:
                 param.requires_grad_(False)
             model.eval()
         except BaseException:
-            model.load_state_dict(frozen_state, strict=False)
+            model.load_state_dict(previous_state, strict=False)
             for param in model.parameters():
                 param.requires_grad_(False)
             model.eval()
@@ -729,10 +738,31 @@ class SmolVLMPipeline:
             "n_train": len(train_checked),
             "n_val": len(val_checked) if val_checked is not None else 0,
             "cache_seconds": cache_seconds,
+            "started_from": "pinned base" + (f" (restored {len(restored)} tensors changed by an earlier run)" if restored else ""),
             "history": history,
             "seconds": round(time.perf_counter() - started, 3),
         }
         return dict(self.adapter)
+
+    def _remember_base(self, model: Any, names: Sequence[str]) -> None:
+        state = model.state_dict()
+        for name in names:
+            if name not in self._base_state:
+                self._base_state[name] = state[name].detach().clone()
+
+    def restore_base(self) -> list[str]:
+        """Put the model back to the pinned base: undo every earlier adapt() or load_artifact() overlay. Returns the
+        names of the restored tensors (empty when the model was never changed)."""
+        model, _processor = self._require_model()
+        state = model.state_dict()
+        # Only tensors whose live value differs from the base count as restored, so a first adapt() on the
+        # untouched base reports "pinned base" without claiming an earlier run changed anything.
+        restored = sorted(n for n, base in self._base_state.items() if not bool((state[n] == base).all()))
+        if restored:
+            model.load_state_dict(dict(self._base_state), strict=False)
+            model.eval()
+        self.adapter = None
+        return restored
 
     def save_artifact(self, output_dir: str | Path, metadata: Mapping[str, Any] | None = None) -> Path:
         """Write the trained tensors as safetensors plus a manifest naming the base, the digests, the instruction and
@@ -788,6 +818,8 @@ class SmolVLMPipeline:
         for name, tensor in tensors.items():
             if tuple(tensor.shape) != tuple(state[name].shape):
                 raise ValueError(f"artifact tensor {name} has shape {tuple(tensor.shape)}, base has {tuple(state[name].shape)}")
+        self._remember_base(model, expected)
+        self.restore_base()
         model.load_state_dict({k: v.to(state[k].device, state[k].dtype) for k, v in tensors.items()}, strict=False)
         model.eval()
         self.adapter = {**manifest["adapter"], "trainable_names": expected, "history": manifest.get("history", [])}

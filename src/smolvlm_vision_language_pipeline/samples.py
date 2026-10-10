@@ -310,10 +310,30 @@ def check_split_disjoint(splits: Mapping[str, Sequence[Mapping[str, Any]]]) -> d
     return {name: len(records) for name, records in splits.items()}
 
 
+def _split_sizes(n: int, val_fraction: float, test_fraction: float) -> tuple[int, int, int]:
+    """(train, validation, test) that `split_dataset` cuts from `n` distinct images."""
+    n_test = max(1, round(n * test_fraction))
+    n_val = round(n * val_fraction)
+    return n - n_test - n_val, n_val, n_test
+
+
+def min_byod_records(*, val_fraction: float = 0.15, test_fraction: float = 0.2) -> dict[str, int]:
+    """The smallest dataset `split_dataset` accepts with these fractions: `MIN_RECORDS` training images and (when
+    `val_fraction` > 0) at least one validation image, after at least one test image is held out. With the default
+    fractions that is 12 distinct images, split 8 / 2 / 2."""
+    for n in range(1, MAX_RECORDS + 1):
+        train, val, test = _split_sizes(n, val_fraction, test_fraction)
+        if train >= MIN_RECORDS and (val >= 1 or val_fraction == 0):
+            return {"total": n, "train": train, "validation": val, "test": test}
+    raise ValueError("no dataset size satisfies these fractions")
+
+
 def split_dataset(
     records: Sequence[Mapping[str, Any]], *, val_fraction: float = 0.15, test_fraction: float = 0.2, seed: int = 0
 ) -> dict[str, list[dict[str, Any]]]:
-    """Seeded shuffle of a BYOD dataset into train/validation/test after de-duplicating images."""
+    """Seeded shuffle of a BYOD dataset into train/validation/test after de-duplicating images. The training split must
+    hold `MIN_RECORDS` images and the validation split (when `val_fraction` > 0) at least one; the refusal names the
+    split and the minimum total (`min_byod_records`)."""
     if not (0.0 <= val_fraction < 1.0 and 0.0 < test_fraction < 1.0 and val_fraction + test_fraction < 1.0):
         raise ValueError("fractions must satisfy 0 <= val < 1, 0 < test < 1, val + test < 1")
     checked = validate_dataset(records)["records"]
@@ -326,50 +346,101 @@ def split_dataset(
             unique.append(record)
     random.Random(seed).shuffle(unique)
     n = len(unique)
-    n_test = max(1, round(n * test_fraction))
-    n_val = round(n * val_fraction)
-    if n - n_test - n_val < 1:
-        raise ValueError(f"{n} distinct images are too few to split into train/validation/test")
+    n_train, n_val, n_test = _split_sizes(n, val_fraction, test_fraction)
+    need = min_byod_records(val_fraction=val_fraction, test_fraction=test_fraction)
+    duplicates = len(checked) - n
+    if n_train < MIN_RECORDS or (val_fraction > 0 and n_val < 1):
+        short = "training split" if n_train < MIN_RECORDS else "validation split"
+        raise ValueError(
+            f"{n} distinct images ({duplicates} duplicate image(s) removed) leave the {short} with "
+            f"{n_train if n_train < MIN_RECORDS else n_val} image(s); the training split needs {MIN_RECORDS} and the "
+            f"validation split 1, so supply at least {need['total']} distinct images (split {need['train']} / "
+            f"{need['validation']} / {need['test']})"
+        )
     return {"test": unique[:n_test], "validation": unique[n_test : n_test + n_val], "train": unique[n_test + n_val :]}
 
 
-def load_byod_dataset(path: str | Path) -> list[dict[str, Any]]:
+_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp", ".gif")
+
+
+def _skipped_member(relative: str) -> bool:
+    """Operating-system litter that is never data: macOS resource forks and hidden files."""
+    parts = Path(relative).parts
+    return any(part == "__MACOSX" or part.startswith(".") for part in parts)
+
+
+def load_byod_dataset(path: str | Path, *, report: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Records from a directory or zip holding line images and a `transcripts.csv` with the columns `file` and `text`
-    (and optionally `id`); every image file must have a transcript row and every row an image."""
+    (and optionally `id`); every image file must have a transcript row and every row an image. Rows name images by
+    file name; two images with the same name in different folders are refused, never overwritten. `__MACOSX` entries,
+    hidden files and files that are not images (a README, say) are skipped and listed in `report["skipped"]`."""
     source = Path(path)
-    members: dict[str, bytes] = {}
+    found: dict[str, bytes] = {}  # relative path -> bytes
     if source.is_dir():
         for file in sorted(source.rglob("*")):
             if file.is_file():
-                members[file.name] = file.read_bytes()
+                found[file.relative_to(source).as_posix()] = file.read_bytes()
     elif zipfile.is_zipfile(source):
         with zipfile.ZipFile(source) as archive:
             for info in archive.infolist():
                 if not info.is_dir():
-                    members[Path(info.filename).name] = archive.read(info)  # flattened; no extractall
+                    found[info.filename] = archive.read(info)  # read in memory; no extractall
     else:
         raise ValueError(f"{source} is neither a directory nor a zip file")
-    if "transcripts.csv" not in members:
+    skipped = sorted(rel for rel in found if _skipped_member(rel))
+    members: dict[str, bytes] = {}
+    where_found: dict[str, str] = {}
+    table_paths = [rel for rel in found if rel not in skipped and Path(rel).name == "transcripts.csv"]
+    if len(table_paths) > 1:
+        raise ValueError(f"BYOD data holds more than one transcripts.csv: {', '.join(sorted(table_paths))}")
+    for rel, data in found.items():
+        name = Path(rel).name
+        if rel in skipped or name == "transcripts.csv":
+            continue
+        if Path(name).suffix.lower() not in _IMAGE_SUFFIXES:
+            skipped.append(rel)
+            continue
+        if name in members:
+            raise ValueError(
+                f"two images share the file name {name!r} ({where_found[name]} and {rel}); transcripts.csv names images "
+                "by file name, so rename one of them"
+            )
+        members[name] = data
+        where_found[name] = rel
+    if not table_paths:
         raise ValueError("BYOD data must include transcripts.csv with the columns file and text")
-    rows = list(csv.DictReader(io.StringIO(members["transcripts.csv"].decode("utf-8-sig"))))
-    if not rows or "file" not in rows[0] or "text" not in rows[0]:
+    reader = csv.DictReader(io.StringIO(found[table_paths[0]].decode("utf-8-sig")))
+    if "file" not in (reader.fieldnames or []) or "text" not in (reader.fieldnames or []):
         raise ValueError("transcripts.csv must have the columns file and text")
+    rows = list(reader)
+    if not rows:
+        raise ValueError("transcripts.csv has no data rows: add one row per line image (file, text)")
     out = []
-    for row in rows:
-        name = Path(str(row.get("file", "")).strip()).name
+    for line, row in enumerate(rows, start=2):  # line 1 is the header
+        name = Path(str(row.get("file", "") or "").strip()).name
+        where = f"transcripts.csv line {line} (file {name!r})"
         if name not in members:
-            raise ValueError(f"transcripts.csv names a missing image: {name}")
+            raise ValueError(f"{where}: names a missing image; every row must name an image file in the dataset")
         try:
             image = Image.open(io.BytesIO(members[name]))
             image.load()
         except Exception as exc:  # noqa: BLE001
-            raise ValueError(f"BYOD file is not a decodable image: {name}") from exc
+            raise ValueError(f"{where}: BYOD file is not a decodable image ({exc})") from exc
+        try:
+            validate_image(image)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{where}: {exc}") from None
+        text = normalise_text(str(row.get("text", "") or ""))
+        if not MIN_TEXT_CHARS <= len(text) <= MAX_TEXT_CHARS:
+            raise ValueError(f"{where}: the transcript has {len(text)} characters after whitespace normalisation; {MIN_TEXT_CHARS}..{MAX_TEXT_CHARS} are required")
         rid = str(row.get("id", "") or "").strip()
-        out.append({"id": rid or re.sub(r"[^A-Za-z0-9_.:-]", "_", Path(name).stem)[:64], "image": image.convert("RGB"), "text": str(row.get("text", ""))})
-    listed = {Path(str(r.get("file", "")).strip()).name for r in rows}
-    unlisted = [n for n in members if n != "transcripts.csv" and n not in listed]
+        out.append({"id": rid or re.sub(r"[^A-Za-z0-9_.:-]", "_", Path(name).stem)[:64], "image": image.convert("RGB"), "text": str(row.get("text", "") or "")})
+    listed = {Path(str(r.get("file", "") or "").strip()).name for r in rows}
+    unlisted = [where_found[n] for n in members if n not in listed]
     if unlisted:
         raise ValueError(f"{len(unlisted)} image file(s) have no transcripts.csv row, e.g. {unlisted[0]}")
+    if report is not None:
+        report.update({"images": len(members), "rows": len(rows), "skipped": sorted(skipped)})
     return out
 
 
