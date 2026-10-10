@@ -77,6 +77,7 @@ def test_one_epoch_adaptation_and_artifact_round_trip(pipe, records, tmp_path):
     result = pipe.adapt(records[:12], records[12:], epochs=1, batch_size=4, max_new_tokens=64)
     assert result["n_trainable"] == ADAPTER_PARAMETERS and result["n_total"] == PARAMETER_COUNT and result["first_trainable_layer"] == 24 and result["prompt"] == TRANSCRIBE_PROMPT
     assert result["history"][0]["note"] == "frozen model" and result["history"][1]["train_loss"] > 0.0
+    assert result["started_from"] == "pinned base"  # first adapt on the untouched base: nothing to restore (t5-base 93a578f)
     assert set(result["history"][1]["val"]) == {"cer", "wer", "cer_macro", "exact_match", "n"} and result["best_epoch"] in (0, 1)
     assert all(n.startswith(_TRAINABLE_PREFIXES) for n in result["trainable_names"])
     assert not any(n.startswith(("model.vision_model", "model.connector", "model.text_model.embed_tokens", "lm_head")) for n in result["trainable_names"])

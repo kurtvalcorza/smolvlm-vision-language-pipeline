@@ -77,6 +77,7 @@ def test_svl_m1_carried_lock_is_the_committed_lock_and_pins_every_runtime_pin(no
     build.check_lock(build._pins(ROOT), lock_text)
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="the worker protocol uses Linux pass_fds (as in owlv2-detection-pipeline)")
 def test_svl_m1_section_1_is_idempotent_and_keeps_the_live_worker(notebook, tmp_path, monkeypatch, capsys):
     """The real Section 1 cell, run twice with a stand-in interpreter: the matching environment is reused (no
     download) and the live worker — with every variable later cells created — is kept."""
@@ -162,7 +163,8 @@ def test_svl_m2_restore_base_undoes_every_earlier_change_stand_in():
     pipe._remember_base(model, names)
     model.params[names[0]] += 5  # an earlier adaptation
     pipe.adapter = {"best_epoch": 3}
-    assert pipe.restore_base() == names and pipe.adapter is None
+    assert pipe.restore_base() == [names[0]] and pipe.adapter is None  # only the changed tensor is reported
+    assert pipe.restore_base() == []  # nothing differs from the base any more (a fresh adapt says "pinned base")
     assert (model.params[names[0]] == 0).all() and (model.params[names[1]] == 1).all()
     pipe._remember_base(model, names)  # a second call keeps the first (base) values
     model.params[names[1]] += 2
@@ -345,3 +347,8 @@ def test_svl_m3_split_boundary_is_disclosed_in_sections_4_and_8(notebook):
     section_8 = markdown[markdown.index("## 8. ") : markdown.index("## 9. ")]
     for text in (section_4, section_8):
         assert "share pages and writers" in text and "optimistic" in text
+
+
+def test_svl_s4_declares_notebook_spec_2_2():
+    nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
+    assert nb["metadata"]["dimer"]["notebook_spec"] == "2.2"

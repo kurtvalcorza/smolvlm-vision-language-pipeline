@@ -728,6 +728,6 @@ TEMPLATE = {
         "- SmolVLM: Redefining small and efficient multimodal models (Marafioti et al., 2025): https://arxiv.org/abs/2504.05299\n"
         "- Belfort-line dataset (Teklia, MIT): https://huggingface.co/datasets/Teklia/Belfort-line — Tarride et al., Handwritten Text Recognition from Crowdsourced Annotations (HIP 2023): https://doi.org/10.1145/3604951.3605517\n"
         "- Sibling rows on the same split: https://github.com/kurtvalcorza/got-ocr2-pipeline and https://github.com/kurtvalcorza/florence2-vision-language-pipeline\n"
-        "- DIMER Notebook Specification 2.0 and Model Card Specification 1.1 (fleet specs in the ml-worker repository)"
+        "- DIMER Notebook Specification 2.2 and Model Card Specification 1.1 (fleet specs in the ml-worker repository)"
     ),
 }
