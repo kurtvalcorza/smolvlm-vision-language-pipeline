@@ -157,6 +157,8 @@ stated runtime, not general estimates.
 
 ## Current status
 
+**Pending (tier C review fixes, 2026-10-25):** `tutorials/smolvlm_vision_language_colab.ipynb` blob `b41a7f569c7593b13817157d659f7bc68ed01ff0`, generated at `17e8e76` (T84-1..T84-4). It changes markdown, the use notice, `metadata.dimer` and the `NOTEBOOK_SOURCE` record only. Status **Candidate**; its hosted Colab T4 run is pending, and the runs below describe earlier blobs (REL14).
+
 **Candidate.** The 2026-09-21 Kaggle T4 run of `385b214` / blob `5b2c5b22` needed a manual restart after the install cell, so it is not a one-pass `Run all` and not promotion evidence (review finding SVL-M1); the Release-grade label that rested on it is withdrawn. For the 2026-10-05 review-fix revision, the current blob `3cded40b79ab` (commit `fc5b53c`) completed one pass: Colab CLI 0.7.4 sequential execution, fresh Colab Tesla T4 on 2026-10-10 (13/13 code cells, 0 errors, no restart, 1871.1 s; isolated `uv` CPython 3.12.12 environment from the 48-package hash lock, setup 52 s; held-out CER empty 1.0 / constant 0.944 / frozen 1.809 / adapted 0.890, WER frozen 2.215 / adapted 1.143; validation CER 1.641 at epoch 0 → 0.804 at the kept epoch 7; reload parity 8/8). The REL12 BYOD journeys have not been run on a hosted runtime; until they are, the status stays Candidate. Any later change to the carried modules or to the notebook produces a new blob that needs its own recorded run.
 
 Facts a reviewer should weigh: the sample is nineteenth-century French cursive, far outside the checkpoint's printed and
