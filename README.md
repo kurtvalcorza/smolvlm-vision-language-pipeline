@@ -83,7 +83,7 @@ Measured on CPU (float32, Windows venv, 2026-09-12): load 5.71 s, 128 tokens in 
 
 Repository code is Apache-2.0 (see `LICENSE`). The upstream weights are Apache-2.0; the Belfort-line sample is MIT and is not redistributed; see `docs/WEIGHTS.md`.
 
-Current source update: snapshot validation now runs before model-library imports (Kokoro also validates the language first), so rejected requests fail with the intended validation error even when model libraries are absent. The standalone notebook was regenerated from this source. The retained 2026-09-13 GPU run identifies the earlier notebook blob; the regenerated notebook has not had a fresh GPU execution. Status remains **Candidate**.
+Current source update: snapshot validation now runs before model-library imports (Kokoro also validates the language first), so rejected requests fail with the intended validation error even when model libraries are absent. The standalone notebook was regenerated from this source. The retained 2026-09-13 GPU run identifies an earlier notebook blob; the current blob `b41a7f56` ran its default path in one pass on a fresh Colab Tesla T4 on 2026-10-25 (no restart, 0 errors; `docs/release-verification.md`). Status remains **Candidate**.
 
 ## AI Assistance Disclosure
 
