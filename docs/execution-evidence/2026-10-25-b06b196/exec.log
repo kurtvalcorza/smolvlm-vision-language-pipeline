@@ -1,0 +1,66 @@
+[colab] Parsing notebook '<local-run-dir>/smolvlm_vision_language_colab_b06b196_colab-cli-t4.ipynb'...
+[colab] Executing cell 1/13 - Infrastructure: build (or reuse) the isolated environment and route later cells to it...
+{'isolated_environment': '/content/dimer_isolated_env_ccaa79377d1e', 'reused': False, 'isolated_python': '3.12.12', 'kernel_python': '3.13.16', 'locked_packages': 48, 'setup_seconds': 56}
+{'routed_to': '/content/dimer_isolated_env_ccaa79377d1e/bin/python', 'worker_pid': 953, 'worker_reused': False}
+[colab] Executing cell 2/13 - Infrastructure: record the runtime...
+{'notebook_source': {'repository': 'smolvlm-vision-language-pipeline', 'repository_revision': '17e8e76e993c0a6ff3d50b9ebe0828a1d44467d4', 'embedded_module': 'src/smolvlm_vision_language_pipeline/pipeline.py', 'embedded_modules': ['src/smolvlm_vision_language_pipeline/pipeline.py', 'src/smolvlm_vision_language_pipeline/metrics.py', 'src/smolvlm_vision_language_pipeline/samples.py'], 'module_sha256': 'f21f4a3d4d482c25cd96600947290807d796d68b0d0c3f5b129b9e1450ade653', 'generator': 'build_notebook.py/2.2', 'notebook_spec': '2.5'}, 'python': '3.12.12', 'executable': '/content/dimer_isolated_env_ccaa79377d1e/bin/python', 'torch': '2.14.0+cu130', 'transformers': '4.57.6', 'PIL': '11.3.0', 'cuda': True}
+[colab] Executing cell 3/13 - smolvlm_vision_language-08...
+[colab] Executing cell 4/13 - smolvlm_vision_language-10...
+[colab] Executing cell 5/13 - smolvlm_vision_language-12...
+[colab] Executing cell 6/13 - Infrastructure: stage and digest-verify the pinned snapshot, then load the model...
+{'model_id': 'HuggingFaceTB/SmolVLM-500M-Instruct', 'revision': 'a7da5b986cb59b408707209984f360a5f4ad7e47', 'license': 'apache-2.0', 'files': 13, 'total_bytes': 1019893574}
+{'weights_dir': '/content/weights/smolvlm-500m-instruct', 'fetched': ['README.md', 'added_tokens.json', 'chat_template.json', 'config.json', 'generation_config.json', 'merges.txt', 'model.safetensors', 'preprocessor_config.json', 'processor_config.json', 'special_tokens_map.json', 'tokenizer.json', 'tokenizer_config.json', 'vocab.json']}
+{'verified_files': 13, 'revision': 'a7da5b986cb59b408707209984f360a5f4ad7e47'}
+{'device': 'cuda:0', 'source': 'local-snapshot'}
+[colab] Executing cell 7/13 - smolvlm_vision_language-16...
+{'data_source': 'Belfort-line (test split), first eight parquet row groups @ c4a74bbd39f2 (MIT (Teklia; Belfort municipal council minutes, Zenodo record 8041668; Tarride et al. 2023, https://doi.org/10.1145/3604951.3605517))', 'raw_rows': {'row_groups': 8, 'lines': 800, 'bytes': 42403899, 'seconds': 6.6}, 'splits': {'train': 600, 'validation': 60, 'test': 140}}
+{'train': {'n': 600, 'chars': {'min': 1, 'max': 120, 'total': 24494}, 'words': 4150, 'width': {'min': 145, 'max': 8956}, 'height': {'min': 128, 'max': 128}, 'digest': '64186dce18ca12d3...'}}
+{'validation': {'n': 60, 'chars': {'min': 3, 'max': 98, 'total': 2454}, 'words': 412, 'width': {'min': 306, 'max': 7543}, 'height': {'min': 128, 'max': 128}, 'digest': '5768e17faca8ca13...'}}
+{'test': {'n': 140, 'chars': {'min': 2, 'max': 105, 'total': 6169}, 'words': 1035, 'width': {'min': 197, 'max': 7872}, 'height': {'min': 128, 'max': 128}, 'digest': '0e815da406cccff9...'}}
+{'example': {'id': 'belfort-test-732', 'image': [3773, 128], 'text': 'de subvention. Rapp. M. Birckel.'}}
+{'probe': 'duplicate id', 'rejected': "duplicate id 'same'"}
+{'probe': 'empty transcript', 'rejected': 'records[0]: text has 0 characters after whitespace normalisation; 1..512 are required'}
+{'probe': 'image above the side ceiling', 'rejected': 'records[0]: image side outside 1..MAX_IMAGE_SIDE=16384 px: (16385, 8)'}
+{'probe': 'too small', 'rejected': '3 records; 8..5000 are required'}
+[colab] Executing cell 8/13 - smolvlm_vision_language-19...
+{'ceilings': {'MAX_IMAGES': 1, 'MIN_IMAGE_SIDE': 1, 'MAX_IMAGE_SIDE': 16384, 'MAX_IMAGE_PIXELS': 16777216, 'MAX_TEXT_CHARS': 512, 'MAX_NEW_TOKENS': 512, 'DEFAULT_MAX_NEW_TOKENS': 128, 'DEFAULT_LINE_MAX_NEW_TOKENS': 128, 'DECODING': 'greedy', 'TRANSCRIBE_PROMPT': 'Transcribe the handwritten text in this image.', 'MIN_RECORDS': 8, 'MAX_RECORDS': 5000, 'device': 'cuda:0', 'dtype': 'float32'}}
+{'drawing': 'synthetic_square_circle_384', 'sha256': 'bec2a2b599ecb781...', 'manifest_verdict': 'accepted', 'findings': 1}
+{'frozen': {'seconds': [6.953, 2.552], 'checks': {'answers_are_text': True, 'greedy_settings': True, 'budget_honoured': True, 'identity_reported': True}, 'answers': [('Describe this image in one sentence.', 'Two shapes are present. One is red and the other is blue.', 15, False), ('How many shapes are in the image, and what colour is each one?', 'There are two shapes in the image. Shape A is red, and shape B is blue.', 20, False)], 'verdict': 'not-measurable'}}
+[colab] Executing cell 9/13 - smolvlm_vision_language-22...
+{'empty_baseline': {'cer': 1.0, 'wer': 1.0, 'cer_macro': 1.0, 'exact_match': 0.0}, 'n': 140, 'note': 'empty string for every line'}
+{'constant_baseline': {'cer': 0.944, 'wer': 0.999, 'cer_macro': 0.952, 'exact_match': 0.0}, 'note': "constant training transcript 'idem'"}
+{'frozen_model_test': {'cer': 1.809, 'wer': 2.215, 'cer_macro': 2.078, 'exact_match': 0.007}, 'n': 140, 'ref_chars': 6169, 'hyp_chars': 10515, 'truncated': 14, 'verdict': 'measured', 'seconds': 149.6}
+{'definitions': {'cer': 'character error rate, micro: total character edits (insertions + deletions + substitutions) over total reference characters; 0 is perfect, values above 1 mean over-generation', 'wer': 'word error rate, micro: total word edits over total reference words after lower-casing and whitespace tokenisation; punctuation kept', 'cer_macro': 'mean of the per-line character error rates (each line weighted equally regardless of length)', 'wer_macro': 'mean of the per-line word error rates', 'exact_match': 'fraction of lines whose hypothesis equals the reference after whitespace normalisation'}}
+{'id': 'belfort-test-761', 'reference': "régulariser l'achat", 'frozen': '11/11/2017'}
+{'id': 'belfort-test-763', 'reference': 'Renvoi à la Commission des travaux de diverses questions', 'frozen': 'The word "be" is written three times.'}
+{'id': 'belfort-test-642', 'reference': 'divers instruments de musique', 'frozen': 'The text is written in a cursive style and appears to be a piece of handwriting. The handwriting is legible, but the let'}
+{'id': 'belfort-test-156', 'reference': "Le Maire demande au Conseil s'il y a lieu d'accorder à quelques uns des", 'frozen': 'The word "the" is written in the middle of the page.'}
+[colab] Executing cell 10/13 - smolvlm_vision_language-25...
+{'epoch': 0, 'train_loss': None, 'val_cer': 1.641, 'val_wer': 2.078, 'val_cer_macro': 1.67, 'val_exact_match': 0.0, 'note': 'frozen model'}
+{'epoch': 1, 'train_loss': 3.4069, 'val_cer': 1.145, 'val_wer': 1.35, 'val_cer_macro': 1.246, 'val_exact_match': 0.017}
+{'epoch': 2, 'train_loss': 2.2382, 'val_cer': 1.031, 'val_wer': 1.109, 'val_cer_macro': 1.205, 'val_exact_match': 0.017}
+{'epoch': 3, 'train_loss': 1.4814, 'val_cer': 1.02, 'val_wer': 1.393, 'val_cer_macro': 1.218, 'val_exact_match': 0.017}
+{'epoch': 4, 'train_loss': 0.7285, 'val_cer': 1.128, 'val_wer': 1.563, 'val_cer_macro': 1.396, 'val_exact_match': 0.017}
+{'epoch': 5, 'train_loss': 0.2355, 'val_cer': 0.928, 'val_wer': 1.153, 'val_cer_macro': 0.983, 'val_exact_match': 0.0}
+{'epoch': 6, 'train_loss': 0.0737, 'val_cer': 0.861, 'val_wer': 1.124, 'val_cer_macro': 1.049, 'val_exact_match': 0.0}
+{'epoch': 7, 'train_loss': 0.0521, 'val_cer': 0.804, 'val_wer': 1.012, 'val_cer_macro': 0.899, 'val_exact_match': 0.017}
+{'epoch': 8, 'train_loss': 0.0248, 'val_cer': 1.002, 'val_wer': 1.177, 'val_cer_macro': 1.053, 'val_exact_match': 0.017}
+{'prompt': 'Transcribe the handwritten text in this image.', 'trainable_parameters': 78659520, 'total_parameters': 507482304, 'first_trainable_layer': 24, 'best_epoch': 7, 'selection': 'lowest validation CER', 'loss': 'causal language-model cross-entropy over the assistant turn (transcript tokens and the end-of-utterance token); image tokens and the user turn masked; computed on the cached frozen-prefix hidden states', 'cache_seconds': 408.91, 'started_from': 'pinned base', 'seconds': 1408.7}
+[colab] Executing cell 11/13 - smolvlm_vision_language-28...
+{'cer': {'empty': 1.0, 'constant': 0.944, 'frozen': 1.809, 'adapted': 0.89}}
+{'wer': {'empty': 1.0, 'constant': 0.999, 'frozen': 2.215, 'adapted': 1.143}}
+{'cer_macro': {'empty': 1.0, 'constant': 0.952, 'frozen': 2.078, 'adapted': 1.181}}
+{'exact_match': {'empty': 0.0, 'constant': 0.0, 'frozen': 0.007, 'adapted': 0.014}}
+{'delta_vs_frozen': {'cer': -0.919, 'wer': -1.072, 'cer_macro': -0.897, 'exact_match': 0.007}}
+{'hypothesis_length': {'ref_chars': 6169, 'frozen_hyp_chars': 10515, 'adapted_hyp_chars': 5902, 'frozen_truncated': 14, 'adapted_truncated': 4}}
+{'verdicts': {'adapted_vs_frozen_cer': 'improved', 'adapted_below_empty_baseline': True}}
+{'report': 'outputs/smolvlm_vision_language_evaluation_report.json', 'verdicts': {'adapted_vs_frozen_cer': 'improved', 'adapted_below_empty_baseline': True}, 'adapted_beats_both_baselines': True}
+[colab] Executing cell 12/13 - smolvlm_vision_language-31...
+{'examples': ['belfort-test-112.png', 'belfort-test-156.png', 'belfort-test-48.png', 'belfort-test-642.png', 'belfort-test-761.png', 'belfort-test-763.png'], 'rows': ['reference', 'frozen answer', 'adapted answer']}
+{'adapted': {'seconds': [2.392, 2.839], 'checks': {'answers_are_text': True, 'greedy_settings': True, 'budget_honoured': True, 'identity_reported': True}, 'answers': [('Describe this image in one sentence.', 'Two colors, red and blue.', 8, False), ('How many shapes are in the image, and what colour is each one?', 'There are two shapes in the image. Shape A is red, and shape B is blue.', 20, False)], 'verdict': 'not-measurable'}}
+{'artifact': 'outputs/smolvlm_vision_language_adapter', 'format': 'org.valcorza.smolvlm-500m-instruct.adapter.v1', 'tensors': 73, 'bytes': 314647016, 'sha256': 'ca8401d1db91f7c3...', 'prompt': 'Transcribe the handwritten text in this image.', 'best_epoch': 7}
+{'reload_parity': {'identical_lines': 8, 'of': 8}, 'reloaded_best_epoch': 7}
+['smolvlm_vision_language_adapter', 'smolvlm_vision_language_drawing_adapted.json', 'smolvlm_vision_language_drawing_frozen.json', 'smolvlm_vision_language_evaluation_report.json', 'smolvlm_vision_language_example_line.png', 'smolvlm_vision_language_examples', 'smolvlm_vision_language_input_manifest.json', 'smolvlm_vision_language_result.json', 'smolvlm_vision_language_train.csv']
+[colab] Executing cell 13/13 - smolvlm_vision_language-34...
+{'experiment': 'skipped (RUN_EXPERIMENT = False); the default path above is complete'}
+[colab] Saving notebook with outputs to '<local-run-dir>/smolvlm_vision_language_colab_b06b196_colab-cli-t4_output.ipynb'...

@@ -84,9 +84,9 @@ TEMPLATE = {
         "states with validation-CER epoch selection, scores the held-out lines again, re-runs six held-out lines and the two "
         "drawing prompts with the adapted model, exports the adapter as safetensors with a manifest, and reloads that "
         "artifact into a fresh pipeline to verify transcript parity. The default path needs no repository clone, no DIMER "
-        "worker or service, no credential, no upload dialog and no configuration edit (NOTEBOOK_SPEC 2.0 §5). On a Tesla T4 "
-        "the default path took about 32 minutes of cell time (eight epochs 1452 s, frozen scoring of "
-        "140 lines 157 s); a CUDA runtime is used automatically when present, and **a CPU runtime is not "
+        "worker or service, no credential, no upload dialog and no configuration edit (NOTEBOOK_SPEC 2.5 §5). On a Tesla T4 "
+        "the default path took about 32 minutes of cell time (Kaggle T4 run of blob `5b2c5b22`, 2026-09-21: eight epochs 1452 s, frozen scoring of "
+        "140 lines 157 s; the Colab T4 run of blob `3cded40b`, 2026-10-10, took 1871.1 s of session wall); a CUDA runtime is used automatically when present, and **a CPU runtime is not "
         "practical for the default path** (greedy decoding of some 800 lines plus 600 cached forwards of a 507M-parameter "
         "model)."
     ),
@@ -112,7 +112,7 @@ TEMPLATE = {
         "`Transcribe the handwritten text in this image.`; the lines are nineteenth-century French council minutes in cursive "
         "— the Belfort-line dataset — far outside the model's instruction-tuning distribution, and on them the frozen model "
         "reads a word here and there and answers in English about the rest: a character error rate of **1.809** on "
-        "the 140 held-out lines (the build record's Tesla T4 figure). So the honest question is narrow: does a bounded "
+        "the 140 held-out lines (the recorded runs' Tesla T4 figure). So the honest question is narrow: does a bounded "
         "fine-tuning of the last eight decoder layers on 600 transcribed lines move the held-out **CER** and **WER** on a "
         "line-disjoint test split past two **non-adapted baselines** and the frozen model — and what does it do to the other "
         "prompts the same decoder answers? The two sibling rows that adapted GOT-OCR 2.0 and Florence-2 on the same split "
@@ -128,7 +128,7 @@ TEMPLATE = {
     "guided": {
         "opening": [
             (
-                "**Who this notebook is for.** A learner who knows basic Python, has used Colab or Jupyter, and wants to see what a small instruction-tuned vision-language model does with handwriting it was never trained on, how to measure that honestly with character and word error rates, and how to adapt one instruction to a small transcribed set without fooling themselves — including what the adaptation costs on other prompts. No prior experience with SmolVLM, vision-language models or fine-tuning is assumed; each term is explained where it first matters and again in the **Glossary** at the end. A CUDA GPU runtime (T4) is required in practice: the default path takes about 32 minutes there and hours on CPU.\n\n**Input → Model → Output.**\n\n| | Image + prompt → text | Line transcription (scored) | Bounded fine-tuning |\n|---|---|---|---|\n| Input | one image and one chat-templated user prompt | one handwritten line image and `TRANSCRIBE_PROMPT` | transcribed line images (600 training and 60 validation in the sample) |\n| Model | SigLIP vision encoder, pixel-shuffle connector and a 32-layer decoder, greedy decoding | the same model | the last eight decoder layers and the final norm, trained with the causal language-model loss on the transcript; everything else frozen |\n| Output | the generated assistant turn, `new_tokens` and a `truncated` flag — no score | the transcript, scored by CER and WER against the reference | a 315 MB safetensors adapter, and held-out CER / WER / exact match |\n\n**How to use this notebook.** Choose a GPU runtime (**Runtime → Change runtime type → T4 GPU**), then **Runtime → Run all**. Run all completes in one pass: Section 1 installs nothing into the notebook's own Python, so no restart is needed. Sections 1–3 are **infrastructure** — the isolated environment, the carried package and the model snapshot — and their cells are collapsed; you may run them without studying them. The learning path starts in Section 4. Form fields (`# @param`) are the only values meant to be edited, and the defaults reproduce the recorded run. Before each principal result the notebook asks you to **Predict**; after it come **What to notice** and a collapsible **Check your reasoning** with a worked answer from the recorded run (the Kaggle T4 run of 21 September 2026; another GPU can move the last digits). Section 10 is a **change-one-thing experiment** on the instruction's wording, off by default. **Troubleshooting**, a **Glossary** and a **Conclusion** template are at the end. Writing your predictions down is optional.\n\n**Roadmap:** 1–3 infrastructure → 4 the Belfort lines, validation and the split *(evaluation practice)* → 5 the inference contract on a drawing *(core concept: generated text has no score)* → 6 two baselines and the frozen model *(evaluation practice)* → 7 bounded fine-tuning *(core concept: what is trained)* → 8 held-out evaluation → 9 the lines by eye, the drawing again, export and reload *(engineering)* → 10 change one thing: the prompt (optional) → conclude."
+                "**Who this notebook is for.** A learner who knows basic Python, has used Colab or Jupyter, and wants to see what a small instruction-tuned vision-language model does with handwriting outside its documented training data, how to measure that honestly with character and word error rates, and how to adapt one instruction to a small transcribed set without fooling themselves — including what the adaptation costs on other prompts. No prior experience with SmolVLM, vision-language models or fine-tuning is assumed; each term is explained where it first matters and again in the **Glossary** at the end. A CUDA GPU runtime (T4) is required in practice: the default path takes about 32 minutes there and hours on CPU.\n\n**Input → Model → Output.**\n\n| | Image + prompt → text | Line transcription (scored) | Bounded fine-tuning |\n|---|---|---|---|\n| Input | one image and one chat-templated user prompt | one handwritten line image and `TRANSCRIBE_PROMPT` | transcribed line images (600 training and 60 validation in the sample) |\n| Model | SigLIP vision encoder, pixel-shuffle connector and a 32-layer decoder, greedy decoding | the same model | the last eight decoder layers and the final norm, trained with the causal language-model loss on the transcript; everything else frozen |\n| Output | the generated assistant turn, `new_tokens` and a `truncated` flag — no score | the transcript, scored by CER and WER against the reference | a 315 MB safetensors adapter, and held-out CER / WER / exact match |\n\n**How to use this notebook.** Choose a GPU runtime (**Runtime → Change runtime type → T4 GPU**), then **Runtime → Run all**. Run all completes in one pass: Section 1 installs nothing into the notebook's own Python, so no restart is needed. Sections 1–3 are **infrastructure** — the isolated environment, the carried package and the model snapshot — and their cells are collapsed; you may run them without studying them. The learning path starts in Section 4. Form fields (`# @param`) are the only values meant to be edited, and the defaults reproduce the recorded run. Before each principal result the notebook asks you to **Predict**; after it come **What to notice** and a collapsible **Check your reasoning** with a worked answer from the recorded run (the Kaggle T4 run of blob `5b2c5b22`, 21 September 2026, whose figures the Colab T4 run of blob `3cded40b` on 10 October 2026 repeated; neither re-run for this revision, and another GPU can move the last digits). Section 10 is a **change-one-thing experiment** on the instruction's wording, off by default. **Troubleshooting**, a **Glossary** and a **Conclusion** template are at the end. Writing your predictions down is optional.\n\n**Roadmap:** 1–3 infrastructure → 4 the Belfort lines, validation and the split *(evaluation practice)* → 5 the inference contract on a drawing *(core concept: generated text has no score)* → 6 two baselines and the frozen model *(evaluation practice)* → 7 bounded fine-tuning *(core concept: what is trained)* → 8 held-out evaluation → 9 the lines by eye, the drawing again, export and reload *(engineering)* → 10 change one thing: the prompt (optional) → conclude."
             )
         ]
     },
@@ -153,9 +153,17 @@ TEMPLATE = {
     ),
     "prerequisites": [
         "- **Learner:** basic Python and Colab or Jupyter familiarity; no prior experience with SmolVLM, vision-language models or fine-tuning. The notebook explains the chat template and the assistant turn, greedy decoding, micro and macro CER/WER, the medoid baseline, the frozen-prefix cache and the adapter where they are first used; the Glossary repeats them.",
-        "- **Runtime:** a fresh supported **Linux x86_64** runtime with a CUDA GPU (Google Colab or Kaggle GPU). Section 1 builds its own Python 3.12.12 environment from a hash-locked list of manylinux wheels, so the kernel's own Python version does not matter and nothing is installed into it. The default path uses CUDA automatically when present. Generation is batched for the corpus stages — the prompt length varies with the image's tile count, so batches are left-padded — and the build record measured 157 s to score 140 lines and 1452 s for the eight epochs (caching the prefix hidden states for 600 lines took 427 s) on a Tesla T4, about 32 minutes of cell time for the whole path; a CPU runtime would take hours. The pinned `torch==2.14.0` install and the 1.02 GB checkpoint are the large downloads of the run; the row groups are about 44 MB.",
+        "- **Overlap with the training data:** SmolVLM-500M-Instruct [1] was trained on The Cauldron and Docmatix (model card). "
+        "Neither card names the Belfort lines [5] (Zenodo 8041668, public since 2023), and The Cauldron's subset list (checked "
+        "2026-10-25) does not include them, so no overlap with the test lines is documented; it is inferred to be unlikely, not "
+        "verified, because the PDF-derived Docmatix pages are not enumerated line by line. The Cauldron does include IAM English "
+        "handwriting lines, so the model has seen some handwriting, though no French cursive is documented.",
+        "- **Runtime:** a fresh supported **Linux x86_64** runtime with a CUDA GPU (Google Colab or Kaggle GPU). Section 1 builds its own Python 3.12.12 environment from a hash-locked list of manylinux wheels, so the kernel's own Python version does not matter and nothing is installed into it. The default path uses CUDA automatically when present. Generation is batched for the corpus stages — the prompt length varies with the image's tile count, so batches are left-padded — and the Kaggle T4 run of an earlier blob (`5b2c5b22`, 2026-09-21) measured 157 s to score 140 lines and 1452 s for the eight epochs (caching the prefix hidden states for 600 lines took 427 s); the Colab T4 run of blob `3cded40b` (2026-10-10) took 1871.1 s of session wall in all, about 32 minutes of cell time for the whole path; a CPU runtime would take hours. The pinned `torch==2.14.0` install and the 1.02 GB checkpoint are the large downloads of the run; the row groups are about 44 MB.",
         "- **Knowledge:** basic Python and PIL; what a chat template, a user turn and greedy decoding are; what character and word error rate measure and why they are not capped at 1; why a self-drawn image is a plumbing check while a held-out split of one labelled set is a measurement of that set only.",
         "- **Data contract:** records are `{id, image, text}` — `image` a PIL image (or a file decodable by Pillow) with sides within 1..16,384 px and at most 4096² pixels, `text` its transcript (1..512 characters after whitespace runs are collapsed; case and punctuation kept). Ids match `[A-Za-z0-9_.:-]{1,64}` and are unique; a dataset needs 8..5,000 records; splitting de-duplicates by decoded pixels so no image lands in two splits. BYOD accepts one zip (or directory) of images plus a `transcripts.csv` in the layout named above; after the split the training split needs eight images and the validation split one, so the effective BYOD minimum is **12 distinct images** (`min_byod_records()` computes it). Images are matched by file name: two images with the same name in different folders are refused, and `__MACOSX` entries, hidden files and non-image files are skipped and listed. Every refusal names the `transcripts.csv` line, the file and the rule.",
+        "- **Recorded runs:** numbers quoted from \"the recorded runs\" come from the Kaggle T4 run of blob `5b2c5b22` "
+        "(2026-09-21) and the Colab T4 run of blob `3cded40b` (commit `fc5b53c`, 2026-10-10), which printed the same figures; neither was re-run "
+        "for this revision, and your printed output is the result.",
         "- **Validation is structural, not semantic:** every image is decoded and every transcript checked for length, but nothing checks that a transcript says what its image shows — a mislabelled set is fine-tuned on without complaint.",
         "- **Privacy:** Do not upload confidential or restricted data to a hosted runtime unless you are authorized to process it there. The default path uploads nothing.",
         "- **External access (data):** besides the model snapshot, the default path reads eight row groups of `default/test/0000.parquet` from `https://huggingface.co/datasets/Teklia/Belfort-line/resolve/<revision>/` at the immutable parquet-conversion revision `c4a74bbd…` with HTTPS range requests (the parquet footer plus about 44 MB of row-group bytes out of a 210 MB shard), each row group pinned by SHA-256 and byte total in the carried `samples.py` and refused on any mismatch. Belfort-line is published under the MIT licence (Teklia; Tarride et al. 2023); nothing is redistributed by this repository.",
@@ -348,11 +356,11 @@ TEMPLATE = {
                 "line: what corpus statistics buy without reading the image. The **frozen model** is scored by `pipe.evaluate`, "
                 "which asks `TRANSCRIBE_PROMPT` of every line in left-padded batches of `EVAL_BATCH_SIZE` under a "
                 "`LINE_MAX_NEW_TOKENS` budget and returns the answers as hypotheses with the rates. Expect the frozen model "
-                "**near the empty baseline**: the build record measured 1.809 (hypotheses 1.70 times "
+                "**near the empty baseline**: the recorded runs measured 1.809 (hypotheses 1.70 times "
                 "the reference length — a word or two read, the rest an English sentence about the image); read four of them "
                 "under the references.\n\n"
                 "*Evaluation practice.* **Predict before running:** an empty answer scores CER exactly 1.0. Will the frozen "
-                "model — asked to transcribe French cursive it was never tuned on — score below 1.0, near it, or above it?"
+                "model — asked to transcribe French cursive that its documented training data does not include — score below 1.0, near it, or above it?"
             ),
             "code": (
                 "METRICS = ('cer', 'wer', 'cer_macro', 'exact_match')\n"
@@ -389,10 +397,10 @@ TEMPLATE = {
                 "at a fixed learning rate, gradient clipping at 1.0, seeded shuffling, no scheduler, no augmentation. Epoch 0 "
                 "records the frozen model's validation rates; every epoch is scored on the 60 validation lines, and the epoch "
                 "with the **lowest validation CER** is kept.\n\n"
-                "Watch the validation CER fall from 1.641 to 0.804 (epoch 7 in the build "
-                "record) while the loss drops from about 3.41 to 0.02 — still about 0.8 edits per reference character on the validation lines, and CER counts insertions as well as substitutions and deletions, so 1 − CER is not the share of characters read correctly. The two sibling "
-                "rows on the same split — GOT-OCR 2.0 (0.759 CER) and Florence-2 (0.797) — squash a line into a square; the "
-                "card compares the three.\n\n"
+                "Watch the validation CER fall from 1.641 to 0.804 (epoch 7 in the recorded "
+                "runs) while the loss drops from about 3.41 to 0.02 — still about 0.8 edits per reference character on the validation lines, and CER counts insertions as well as substitutions and deletions, so 1 − CER is not the share of characters read correctly. The two sibling "
+                "rows on the same split (GOT-OCR 2.0, Florence-2) squash a line into a square and report their own numbers in their "
+                "own repositories (see the model card); they were not re-run or paired with this run.\n\n"
                 "*Core concept.* Every call to `pipe.adapt` starts from the **pinned base**: tensors an earlier call changed are "
                 "restored first, so epoch 0 is always the frozen model. Re-running this cell with a changed field is a fresh run, "
                 "not continued training — but it replaces the default results that Sections 8 and 9 export.\n\n"
@@ -429,7 +437,7 @@ TEMPLATE = {
                 "## 8. Held-out evaluation\n\n"
                 "The test lines were never used for training or epoch selection, and no image appears in two splits. The "
                 "adapted model is scored exactly as the frozen model was in Section 6 and the four systems are put side by "
-                "side. Read it in this order: **CER** first (the measure the epoch was selected on — the build record measured "
+                "side. Read it in this order: **CER** first (the measure the epoch was selected on — the recorded runs measured "
                 "1.809 → **0.890**, past both baselines), then **WER** (2.215 → 1.143), "
                 "then the hypothesis length (from 1.70 times the reference length to 0.96), "
                 "then the exact-match rate (2 of the 140 lines read perfectly). The cell reports two **verdicts** — whether the "
@@ -489,7 +497,7 @@ TEMPLATE = {
                 "frozen answer and the adapted answer beneath it) so the numbers can be checked by eye: the adapted rows should "
                 "read the cursive the frozen rows described in English. The drawing from Section 5 is then asked the same two "
                 "prompts by the adapted model — the decoder that was tuned answers every prompt, so this is a small look at what "
-                "the adaptation did *outside* its instruction and its corpus: the build record measured before adaptation `Describe this image in one sentence.` → `Two shapes are present. One is red and the other is blue.`; `How many shapes are in the image, and what colour is each one?` → `There are two shapes in the image. Shape A is red, and shape B is blue.`; after adaptation `Describe this image in one sentence.` → `Two colors, red and blue.`; `How many shapes are in the image, and what colour is each one?` → `There are two shapes in the image. Shape A is red, and shape B is blue.` — one "
+                "the adaptation did *outside* its instruction and its corpus: the recorded runs measured before adaptation `Describe this image in one sentence.` → `Two shapes are present. One is red and the other is blue.`; `How many shapes are in the image, and what colour is each one?` → `There are two shapes in the image. Shape A is red, and shape B is blue.`; after adaptation `Describe this image in one sentence.` → `Two colors, red and blue.`; `How many shapes are in the image, and what colour is each one?` → `There are two shapes in the image. Shape A is red, and shape B is blue.` — one "
                 "drawing of evidence, not a measurement.\n\n"
                 "`pipe.save_artifact` writes the trained tensors — the eight decoder layers and the norm, about 315 MB in "
                 "float32 — as `adapter.safetensors`, with a `manifest.json` recording the artifact format, the base model id and "
@@ -621,12 +629,12 @@ TEMPLATE = {
         "An instruction-tuned vision-language model answers in the register it was tuned on, and asked to transcribe "
         "nineteenth-century cursive French it reads a word or two and describes the rest in English: the frozen model scores "
         "a character error rate of 1.809 on the Belfort lines. A bounded fine-tuning of the last eight decoder layers "
-        "on 600 transcribed lines moves it to 0.890 CER and 1.143 WER in the build record "
+        "on 600 transcribed lines moves it to 0.890 CER and 1.143 WER in the recorded runs "
         "(2 of the held-out lines exact), with a 315 MB adapter that reloads line-for-line. That is the claim: "
         "the adaptation contract works end to end on one instruction of a chat model with a real labelled set, and the numbers "
         "it produces are read as micro and macro rates, against two non-adapted baselines and the frozen model, with the "
-        "hypothesis length beside them rather than in isolation. Read against the two sibling rows on the same split — "
-        "GOT-OCR 2.0 at 0.759 and Florence-2 at 0.797, both squashing the line into a square — SmolVLM's 0.890 is the weakest of the three after adaptation although it keeps the line's aspect ratio through SigLIP tiling, and it started from the worst frozen position (1.809 against GOT-OCR's 1.345 and Florence-2's 0.992); its adapted transcripts are French council prose in the right register and at the right length (0.96 times the reference) but rarely the right words — 10 of 140 lines under 0.5 CER, 24 still above 1.0 — so eight decoder layers on 600 lines learn the language of the corpus before they learn to read it.\n\n"
+        "hypothesis length beside them rather than in isolation. The two sibling rows on the same split (GOT-OCR 2.0 and Florence-2, both squashing the line into a "
+        "square; their numbers are in their own repositories and this model card) ran separate fixed recipes on one seeded 140-line split with no paired test and no dispersion estimate, so the three adapted CERs are not a ranking, and the aspect-ratio difference is not shown to cause any gap; its adapted transcripts are French council prose in the right register and at the right length (0.96 times the reference) but rarely the right words — 10 of 140 lines under 0.5 CER, 24 still above 1.0 — which in this one run looks like learning the language of the corpus more than reading the lines; one run does not establish that mechanism.\n\n"
         "The test split is 140 lines from one seeded draw of one 800-line sample, the validation split that picks the epoch is "
         "60, and both rates are corpus edit distances over one crowdsourced transcription — not a benchmark, not a measure of "
         "reading order or layout. So a result here says the contract works on one council's minutes, not that the adapted "
@@ -666,6 +674,8 @@ TEMPLATE = {
         "GPU.\n"
         "- **You re-ran Section 1 on its own** — nothing is lost: it keeps the running worker and every variable, so the "
         "cells after it keep working. After a session restart, run from the top.\n"
+        "- **Where the environment lives** — Section 1 builds it in a folder named `dimer_isolated_env_<lock digest>` in the working "
+        "directory. Set the environment variable `DIMER_ISOLATED_ENV` before Section 1 to build it somewhere else.\n"
         "- **No GPU / it is very slow** — the default path needs a CUDA runtime in practice (about 32 minutes on a T4, hours "
         "on CPU). Choose **Runtime → Change runtime type → T4 GPU** and run all again.\n"
         "- **`FileNotFoundError: snapshot file missing` or a `sha256`/`size` `ValueError` in Section 3** — a staged file is "
@@ -720,14 +730,12 @@ TEMPLATE = {
         "- One reason not to trust this number on my own documents yet: ___ (for example shared writers across the split, "
         "the macro rate, or drift).\n\n"
         "## References\n\n"
-        "- Repository README: https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/README.md\n"
-        "- Repository model card: https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/MODEL_CARD.md\n"
-        "- Weight provenance: https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/docs/WEIGHTS.md\n"
-        "- Upstream model: https://huggingface.co/{MODEL_ID}\n"
-        "- Upstream code: https://github.com/huggingface/smollm\n"
-        "- SmolVLM: Redefining small and efficient multimodal models (Marafioti et al., 2025): https://arxiv.org/abs/2504.05299\n"
-        "- Belfort-line dataset (Teklia, MIT): https://huggingface.co/datasets/Teklia/Belfort-line — Tarride et al., Handwritten Text Recognition from Crowdsourced Annotations (HIP 2023): https://doi.org/10.1145/3604951.3605517\n"
-        "- Sibling rows on the same split: https://github.com/kurtvalcorza/got-ocr2-pipeline and https://github.com/kurtvalcorza/florence2-vision-language-pipeline\n"
-        "- DIMER Notebook Specification 2.2 and Model Card Specification 1.1 (fleet specs in the ml-worker repository)"
+        "[1] A. Marafioti *et al.*, \"SmolVLM: Redefining small and efficient multimodal models,\" arXiv:2504.05299, 2025. [Online]. Available: https://arxiv.org/abs/2504.05299\n\n"
+        "[2] Hugging Face, \"smollm,\" GitHub repository. [Online]. Available: https://github.com/huggingface/smollm\n\n"
+        "[3] Upstream model checkpoint. [Online]. Available: https://huggingface.co/{MODEL_ID}\n\n"
+        "[4] K. Valcorza, \"smolvlm-vision-language-pipeline,\" README, weight provenance and model card. [Online]. Available: https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/README.md, https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/docs/WEIGHTS.md; model card: https://github.com/kurtvalcorza/smolvlm-vision-language-pipeline/blob/main/MODEL_CARD.md\n\n"
+        "[5] S. Tarride *et al.*, \"Handwritten text recognition from crowdsourced annotations,\" in *Proc. 7th Int. Workshop Historical Document Imaging and Processing (HIP)*, 2023, doi: 10.1145/3604951.3605517. Dataset (Teklia, MIT): https://huggingface.co/datasets/Teklia/Belfort-line\n\n"
+        "[6] K. Valcorza, sibling rows on the same split. [Online]. Available: https://github.com/kurtvalcorza/got-ocr2-pipeline, https://github.com/kurtvalcorza/florence2-vision-language-pipeline\n\n"
+        "[7] DIMER Notebook Specification 2.5 and Model Card Specification 1.1, fleet specs in the ml-worker repository."
     ),
 }
