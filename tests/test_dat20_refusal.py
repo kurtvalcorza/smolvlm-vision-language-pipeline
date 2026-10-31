@@ -286,6 +286,82 @@ def test_genuine_internal_error_keeps_its_traceback(cells, tmp_path, monkeypatch
     assert set(EARLIER) <= set(ns) and (tmp_path / "outputs" / f"{STEM}_result.json").exists()  # nothing is cleared for an internal error
 
 
+# --- the catches are narrow: only bad input is refused; an internal TypeError/KeyError/OSError keeps its traceback ---
+
+
+def test_the_byod_catches_are_narrow_in_the_notebook_source(cells):
+    source = _source(_byod_cell(cells))
+    branch = source[source.index("if USE_BYOD:\n") : source.index("train_records, val_records, test_records = splits")]
+    caught = [line.strip() for line in branch.splitlines() if line.strip().startswith("except ")]
+    assert not [c for c in caught if "TypeError" in c or "KeyError" in c], caught
+    assert [c for c in caught if "OSError" in c] == ["except (OSError, zipfile.BadZipFile) as exc:"], caught
+    assert "        try:\n            records = load_byod_dataset(byod_zip, report=byod_report)\n        except (OSError, zipfile.BadZipFile) as exc:\n" in branch
+    assert "    except BYODRefusal as exc:\n        refuse_byod(exc.file_name, exc.reason)\n    except ValueError as exc:\n        refuse_byod(file_name, exc)\n" in branch
+    assert "\nexcept ValueError as exc:  # validate_dataset and check_split_disjoint raise it for bad input; anything else is a bug\n    if not USE_BYOD:\n        raise" in branch
+
+
+def test_a_zip_with_a_corrupt_member_is_still_one_refused_line(cells, tmp_path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "google.colab", None)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_STORED) as archive:
+        archive.writestr("transcripts.csv", "file,text\nl0.png,item 0\n")
+        archive.writestr("l0.png", _png(0))
+    payload = bytearray(buffer.getvalue())
+    payload[payload.index(b"IHDR") + 8] ^= 0xFF  # one flipped byte inside the stored PNG: its CRC-32 no longer matches
+    (tmp_path / "crc.zip").write_bytes(bytes(payload))
+    _refused(cells, tmp_path, monkeypatch, str(tmp_path / "crc.zip"), "crc.zip", "the dataset cannot be read (BadZipFile: Bad CRC-32")
+
+
+def _stubbed(ns, **overrides):
+    def loader(_path, report=None):
+        report.update({"images": 1, "rows": 1, "skipped": []})
+        return [{"id": "l0"}]
+
+    ns.update(
+        {
+            "load_byod_dataset": loader,
+            "split_dataset": lambda recs, **kwargs: {"train": recs, "validation": recs, "test": recs},
+            "validate_dataset": lambda part, **kwargs: {"records": part},
+            **overrides,
+        }
+    )
+    return ns
+
+
+@pytest.mark.parametrize("where", ["split_dataset", "check_split_disjoint"])
+@pytest.mark.parametrize("error", [TypeError("internal helper bug"), KeyError("internal key"), OSError("internal I/O bug")], ids=["TypeError", "KeyError", "OSError"])
+def test_an_internal_error_after_the_loader_keeps_its_traceback_and_clears_nothing(cells, tmp_path, monkeypatch, error, where):
+    import traceback
+
+    monkeypatch.setitem(sys.modules, "google.colab", None)
+    data = _zip(tmp_path / "mine.zip", {"x.txt": b"x"})
+
+    def broken_helper(*args, **kwargs):
+        raise error
+
+    ns = _stubbed(_namespace(tmp_path, monkeypatch), **{where: broken_helper})
+    with pytest.raises(type(error)) as caught:
+        exec(compile(_cell_code(cells, str(data)), "<section 4>", "exec"), ns)
+    assert caught.value is error and not getattr(caught.value, "dimer_refusal", False)
+    rendered = "".join(traceback.format_exception(caught.value))
+    assert rendered.startswith("Traceback") and "broken_helper" in rendered and "Refused:" not in rendered
+    assert ns["result_payload"] == "old" and (tmp_path / "outputs" / f"{STEM}_result.json").exists()  # nothing is cleared for an internal error
+
+
+def test_a_typeerror_inside_the_loader_is_not_turned_into_a_refusal(cells, tmp_path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "google.colab", None)
+    data = _zip(tmp_path / "mine.zip", {"x.txt": b"x"})
+
+    def buggy_loader(*_args, **_kwargs):
+        raise TypeError("loader bug")
+
+    ns = _namespace(tmp_path, monkeypatch)
+    ns["load_byod_dataset"] = buggy_loader
+    with pytest.raises(TypeError, match="loader bug") as caught:
+        exec(compile(_cell_code(cells, str(data)), "<section 4>", "exec"), ns)
+    assert not getattr(caught.value, "dimer_refusal", False)
+
+
 def test_default_path_contract_failure_is_not_a_refusal(cells, tmp_path, monkeypatch):
     """With USE_BYOD off, a pinned sample that fails its contract is a genuine error and keeps its traceback."""
     ns = _namespace(tmp_path, monkeypatch)
