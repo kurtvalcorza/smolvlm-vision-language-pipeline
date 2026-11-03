@@ -1,0 +1,71 @@
+{
+  "repo": "smolvlm-vision-language-pipeline",
+  "sha": "9b2b00724ba29a6f3743117efa35839aa2d388a7",
+  "notebook": "tutorials/smolvlm_vision_language_colab.ipynb",
+  "blob": "a200e8ac8a649b2512b32261e8ed5feace653625",
+  "gpu": "T4",
+  "session": "suite-smolvlm-9b2b007-aeca",
+  "started_utc": "2026-11-03T09:15:50+00:00",
+  "runner": "Colab CLI `colab exec -f` on a fresh session (not a browser Run all)",
+  "overrides": [
+    {
+      "name": "USE_BYOD",
+      "from": "False",
+      "to": "True"
+    },
+    {
+      "name": "BYOD_PATH",
+      "from": "''",
+      "to": "'/content/sample_data'"
+    }
+  ],
+  "run_copy_blob": "9b5cabf74850271df4cf0b36f97e27c8424a0ca2",
+  "run_copy_sha256": "8caafc1d8d5568cb6b3d9f5edd716ebe4e321d8c9840491e6641c6ec66191d72",
+  "run_copy_note": "refusal run: the run copy is the committed notebook with the listed assignment overrides, cut immediately after the refusal cell and re-serialised (nbformat layout); input_unchanged compares against that copy",
+  "truncated_after_cell": "smolvlm_vision_language-16",
+  "refusal_cell_ref": "smolvlm_vision_language-16",
+  "refusal_cell_index": 7,
+  "cells_dropped": 20,
+  "code_cells_dropped": 6,
+  "original_sha256": "ecbb9be92f7a55a85cf6ccf6c20eaf384d0f1bb85da879b9f12154932caf3617",
+  "status": "[suite-smolvlm-9b2b007-aeca] gpu-t4-s-ass1a0-36mcbn8bizzrs | Hardware: T4 | Shape: Standard | Variant: GPU | Status: IDLE",
+  "exec_exit_code": 0,
+  "stopped": true,
+  "stop_verified": true,
+  "wall_s": 141.6,
+  "input_unchanged": true,
+  "executed_file": "smolvlm_vision_language_colab_9b2b007_colab-cli-t4_output.ipynb",
+  "log_cells": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "log_total": 7,
+  "code_cells": 7,
+  "executed_cells": 4,
+  "errors": [
+    {
+      "cell": "smolvlm_vision_language-16",
+      "ename": "IsolatedCellRefusal",
+      "evalue": "sample_data: BYOD data must include transcripts.csv with the columns file and text; fix the input and run this cell again (the earlier results of this session were removed)."
+    }
+  ],
+  "execution_counts": [],
+  "sequential": null,
+  "executed_sha256": "01c7ea9b2e03b7dbe107505e64913162b7eaca9214f5d3a8876fb63169428f48",
+  "log_sequential_complete": true,
+  "mode": "expect_refusal",
+  "refusal_line": "Refused: sample_data: BYOD data must include transcripts.csv with the columns file and text; fix the input and run this cell again (the earlier results of this session were removed).",
+  "halting_cell_index": 7,
+  "halting_cell_id": "smolvlm_vision_language-16",
+  "error_cells": [
+    7
+  ],
+  "refusal_fail_reasons": [],
+  "refusal_ok": true,
+  "verdict": "PASS"
+}
